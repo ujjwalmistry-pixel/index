@@ -1,0 +1,2085 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lenskart Maintenance Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pptxgenjs/3.12.0/pptxgen.bundle.js"></script>
+<style>
+:root{
+  --bg:#eef0fb;--surface:#fff;--surface2:#f6f7fd;--surface3:#eceefb;
+  --border:#dde0f2;--border2:#c7cbe8;
+  --accent:#5457e6;--accent2:#4244c9;--accent-light:#ecedff;
+  --purple:#7c3aed;--purple-light:#f4eeff;
+  --blue:#2563eb;--blue-light:#eff5ff;
+  --green:#0a9d63;--green-light:#e9fbf2;
+  --amber:#d97706;--amber-light:#fff7ea;
+  --red:#dc2626;--red-light:#fdeded;
+  --text:#1b1a40;--muted:#5f6585;--muted2:#9296b5;
+  --font:'Inter',sans-serif;--mono:'JetBrains Mono',monospace;
+  --r:12px;--r2:8px;
+  --sh:0 1px 3px rgba(84,87,230,.07),0 1px 2px rgba(84,87,230,.05);
+  --sh2:0 6px 22px rgba(84,87,230,.13);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;min-height:100vh;}
+.hidden{display:none!important;}
+::-webkit-scrollbar{width:7px;height:7px;}
+::-webkit-scrollbar-track{background:var(--surface2);}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px;}
+::-webkit-scrollbar-thumb:hover{background:var(--accent);}
+
+/* LOGIN */
+#login{min-height:100vh;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,#e6e7fb 0%,#eef0fb 45%,#efe9ff 100%);position:relative;overflow:hidden;}
+#login::before{content:'';position:absolute;top:-140px;right:-120px;width:520px;height:520px;
+  background:radial-gradient(circle,rgba(84,87,230,.13)0%,transparent 70%);border-radius:50%;}
+#login::after{content:'';position:absolute;bottom:-90px;left:-90px;width:400px;height:400px;
+  background:radial-gradient(circle,rgba(124,58,237,.10)0%,transparent 70%);border-radius:50%;}
+.login-card{background:var(--surface);border:1px solid var(--border);border-radius:22px;
+  padding:46px 44px;width:445px;max-width:95vw;box-shadow:0 12px 48px rgba(84,87,230,.16);position:relative;z-index:2;}
+.brand{display:flex;align-items:center;gap:12px;margin-bottom:34px;}
+.brand-ico{width:46px;height:46px;background:linear-gradient(135deg,var(--accent),var(--purple));
+  border-radius:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 6px 16px rgba(84,87,230,.36);}
+.brand-ico svg{width:23px;height:23px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.brand-tx .nm{font-size:19px;font-weight:800;letter-spacing:-.4px;}
+.brand-tx .sb{font-size:12px;color:var(--muted);margin-top:1px;}
+.login-card h2{font-size:25px;font-weight:800;letter-spacing:-.5px;margin-bottom:6px;}
+.login-card .tag{font-size:13px;color:var(--muted);margin-bottom:28px;}
+.field{margin-bottom:18px;}
+.field label{display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:7px;text-transform:uppercase;letter-spacing:.6px;}
+.field input{width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r2);
+  padding:12px 14px;color:var(--text);font-family:var(--font);font-size:14px;outline:none;transition:all .2s;}
+.field input:focus{border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px rgba(84,87,230,.11);}
+.btn-primary{width:100%;background:linear-gradient(135deg,var(--accent),var(--purple));border:none;border-radius:var(--r2);
+  padding:13px;color:#fff;font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;margin-top:6px;
+  transition:all .2s;box-shadow:0 6px 16px rgba(84,87,230,.34);}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 9px 22px rgba(84,87,230,.44);}
+.login-err{background:var(--red-light);border:1px solid #f4a9a9;border-radius:var(--r2);
+  padding:10px 14px;color:var(--red);font-size:13px;margin-bottom:14px;display:flex;gap:8px;align-items:center;}
+.login-hint{margin-top:18px;padding:14px;background:var(--accent-light);border-radius:var(--r2);border:1px solid var(--border);}
+.login-hint p{font-size:12px;color:var(--accent2);line-height:1.6;}
+
+/* TOPBAR */
+#app{display:flex;flex-direction:column;min-height:100vh;}
+.topbar{background:var(--surface);border-bottom:1.5px solid var(--border);padding:8px 18px;min-height:60px;
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;position:sticky;top:0;z-index:300;box-shadow:var(--sh);}
+.tb-brand{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.tb-ico{width:32px;height:32px;background:linear-gradient(135deg,var(--accent),var(--purple));
+  border-radius:9px;display:flex;align-items:center;justify-content:center;}
+.tb-ico svg{width:17px;height:17px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.tb-nm{font-size:15px;font-weight:800;letter-spacing:-.3px;}
+.tb-sep{width:1px;height:30px;background:var(--border);margin:0 2px;}
+.navbar{display:flex;gap:2px;flex:1;flex-wrap:wrap;}
+.navbar::-webkit-scrollbar{height:0;}
+.nav-btn{background:none;border:none;color:var(--muted);font-family:var(--font);font-size:12.5px;font-weight:500;
+  padding:6px 9px;border-radius:9px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px;white-space:nowrap;}
+.nav-btn:hover{background:var(--surface2);color:var(--text);}
+.nav-btn.active{background:var(--accent-light);color:var(--accent);font-weight:600;}
+.nbadge{background:var(--red);color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;font-weight:700;}
+.nbadge.g{background:var(--green);}
+.tb-right{display:flex;align-items:center;gap:9px;margin-left:auto;}
+.qs{display:flex;align-items:center;background:var(--surface2);border:1.5px solid var(--border);border-radius:20px;
+  padding:0 12px;gap:7px;height:35px;transition:all .2s;}
+.qs:focus-within{border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px rgba(84,87,230,.1);}
+.qs input{background:none;border:none;outline:none;font-family:var(--font);font-size:13px;width:130px;color:var(--text);}
+.upill{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1.5px solid var(--border);border-radius:20px;padding:4px 12px 4px 5px;}
+.uav{width:27px;height:27px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--purple));
+  color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+.unm{font-size:12px;font-weight:600;}.url{font-size:10px;color:var(--muted);}
+.lo-btn{background:none;border:1.5px solid var(--border);border-radius:9px;padding:6px 13px;color:var(--muted);
+  font-family:var(--font);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;}
+.lo-btn:hover{border-color:var(--red);color:var(--red);background:var(--red-light);}
+
+/* SUBNAV / BACK */
+.subnav{background:var(--surface);border-bottom:1px solid var(--border);padding:9px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;position:sticky;top:0;z-index:250;}
+.back-btn{background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:6px 14px;
+  color:var(--text);font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .15s;}
+.back-btn:hover{background:var(--accent-light);border-color:var(--accent);color:var(--accent);}
+.crumb{font-size:13px;color:var(--muted);}
+.crumb b{color:var(--text);font-weight:600;}
+.subnav-right{margin-left:auto;display:flex;gap:8px;align-items:center;}
+
+/* CONTENT */
+.content{padding:22px;flex:1;}
+.phdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;}
+.ptitle{font-size:19px;font-weight:800;letter-spacing:-.4px;}
+.psub{font-size:12px;color:var(--muted);margin-top:3px;}
+
+/* STAT CARDS */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px;}
+.scard{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:15px 17px;box-shadow:var(--sh);position:relative;overflow:hidden;}
+.scard::after{content:'';position:absolute;top:0;right:0;width:60px;height:60px;border-radius:50%;opacity:.07;}
+.scard .sl{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:9px;}
+.scard .sv{font-size:27px;font-weight:800;letter-spacing:-1.4px;line-height:1;}
+.scard .ss{font-size:11px;color:var(--muted2);margin-top:5px;}
+.c-accent .sv{color:var(--accent);}.c-accent::after{background:var(--accent);}
+.c-blue .sv{color:var(--blue);}.c-blue::after{background:var(--blue);}
+.c-green .sv{color:var(--green);}.c-green::after{background:var(--green);}
+.c-amber .sv{color:var(--amber);}.c-amber::after{background:var(--amber);}
+.c-red .sv{color:var(--red);}.c-red::after{background:var(--red);}
+.c-purple .sv{color:var(--purple);}.c-purple::after{background:var(--purple);}
+
+/* TOOLBAR + BUTTONS */
+.tbl-wrap{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh);}
+.toolbar{display:flex;align-items:center;gap:8px;padding:12px 15px;border-bottom:1.5px solid var(--border);flex-wrap:wrap;}
+.tbl-title{font-size:13px;font-weight:700;flex:1;}
+.fsel{background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r2);padding:6px 10px;
+  color:var(--text);font-family:var(--font);font-size:12px;cursor:pointer;outline:none;transition:border-color .2s;}
+.fsel:focus{border-color:var(--accent);}
+.fsearch{background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r2);padding:6px 12px;
+  color:var(--text);font-family:var(--font);font-size:12px;outline:none;width:185px;transition:all .2s;}
+.fsearch:focus{border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px rgba(84,87,230,.08);}
+.btn-sm{padding:6px 12px;font-size:12px;font-weight:600;border-radius:var(--r2);cursor:pointer;font-family:var(--font);border:1.5px solid var(--border);background:var(--surface2);color:var(--muted);transition:all .15s;display:inline-flex;align-items:center;gap:5px;}
+.btn-sm:hover{border-color:var(--accent);color:var(--accent);}
+.btn-accent{background:var(--accent);color:#fff;border-color:var(--accent);}
+.btn-accent:hover{background:var(--accent2);color:#fff;}
+.btn-green{background:var(--green);color:#fff;border-color:var(--green);}
+.btn-green:hover{background:#08824f;color:#fff;}
+.btn-red-o{background:var(--red);color:#fff;border-color:var(--red);}
+.export-grp{display:flex;gap:6px;}
+
+/* TABLE */
+.tscroll{overflow-x:auto;max-height:calc(100vh - 320px);}
+table{width:100%;border-collapse:collapse;font-size:12.5px;}
+thead th{background:var(--surface2);color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;
+  letter-spacing:.5px;padding:10px 12px;text-align:left;border-bottom:1.5px solid var(--border);white-space:nowrap;position:sticky;top:0;z-index:5;}
+tbody tr{border-bottom:1px solid var(--border);transition:background .1s;}
+tbody tr:hover{background:var(--surface2);}
+tbody tr:last-child{border-bottom:none;}
+tbody td{padding:9px 12px;vertical-align:middle;max-width:230px;}
+td.mono{font-family:var(--mono);font-size:11px;color:var(--accent2);}
+.badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:10.5px;font-weight:600;white-space:nowrap;}
+.b-assigned{background:var(--blue-light);color:#1d4ed8;border:1px solid #bcd4fe;}
+.b-awaiting{background:var(--amber-light);color:#b45309;border:1px solid #fbe1a8;}
+.b-reopen{background:var(--red-light);color:#b91c1c;border:1px solid #f6b0b0;}
+.b-closed{background:var(--green-light);color:#066b43;border:1px solid #92e3bd;}
+.b-progress{background:var(--purple-light);color:#6d28d9;border:1px solid #ccb6f7;}
+.tat-b{display:inline-block;padding:2px 8px;border-radius:8px;font-size:10.5px;font-family:var(--mono);font-weight:500;}
+.tat-high{background:var(--red-light);color:var(--red);}
+.tat-ok{background:var(--green-light);color:var(--green);}
+.age-crit{color:var(--red);font-weight:600;}.age-high{color:var(--amber);font-weight:500;}
+.edit-inp,.edit-sel{background:var(--surface2);border:1.5px solid var(--border);border-radius:5px;padding:5px 8px;
+  color:var(--text);font-family:var(--font);font-size:12px;width:100%;min-width:95px;outline:none;transition:border-color .2s;}
+.edit-inp:focus,.edit-sel:focus{border-color:var(--accent);background:#fff;}
+.edit-sel{cursor:pointer;}
+.save-btn{background:var(--accent);border:none;border-radius:6px;padding:5px 12px;color:#fff;font-family:var(--font);
+  font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .15s;}
+.save-btn:hover{background:var(--accent2);}
+
+/* PAGINATION */
+.pgn{display:flex;align-items:center;justify-content:space-between;padding:10px 15px;border-top:1px solid var(--border);}
+.pg-info{font-size:11px;color:var(--muted);}
+.pg-btns{display:flex;gap:4px;}
+.pg-btn{background:var(--surface2);border:1.5px solid var(--border);border-radius:6px;padding:4px 10px;color:var(--muted);
+  font-family:var(--font);font-size:12px;cursor:pointer;transition:all .15s;}
+.pg-btn:hover,.pg-btn.on{background:var(--accent);border-color:var(--accent);color:#fff;}
+.pg-btn:disabled{opacity:.3;cursor:not-allowed;}
+
+/* SUMMARY */
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:22px;}
+.sum-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh);}
+.sum-head{padding:12px 15px;border-bottom:1.5px solid var(--border);font-size:11px;font-weight:700;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;justify-content:space-between;background:var(--surface2);}
+.sum-head .h2{font-size:10px;color:var(--muted2);font-weight:400;text-transform:none;}
+.srow{display:flex;align-items:center;padding:9px 15px;border-bottom:1px solid var(--border);transition:background .1s;}
+.srow:last-child{border-bottom:none;}.srow:hover{background:var(--surface2);}
+.sr-nm{flex:1;font-size:12.5px;font-weight:500;}
+.sr-bar{flex:2;margin:0 10px;}
+.btr{background:var(--border);border-radius:4px;height:6px;overflow:hidden;}
+.bfo{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--accent),var(--purple));transition:width .7s;}
+.sr-n{display:flex;gap:8px;font-size:11px;font-family:var(--mono);}
+.no{color:var(--accent);font-weight:600;}.nc{color:var(--green);font-weight:600;}
+.age-row{display:flex;align-items:center;gap:10px;padding:9px 15px;border-bottom:1px solid var(--border);}
+.age-row:last-child{border-bottom:none;}
+.apill{display:inline-block;padding:3px 11px;border-radius:20px;font-size:11px;font-weight:600;font-family:var(--mono);}
+.a-crit{background:var(--red-light);color:var(--red);}.a-high{background:var(--amber-light);color:var(--amber);}
+.a-med{background:var(--purple-light);color:var(--purple);}.a-ok{background:var(--green-light);color:var(--green);}
+
+/* SEARCH */
+.search-big{display:flex;gap:10px;margin-bottom:22px;}
+.search-big input{flex:1;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r2);
+  padding:13px 16px;color:var(--text);font-family:var(--font);font-size:14px;outline:none;transition:all .2s;box-shadow:var(--sh);}
+.search-big input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(84,87,230,.11);}
+.search-big button{background:linear-gradient(135deg,var(--accent),var(--purple));border:none;border-radius:var(--r2);
+  padding:13px 28px;color:#fff;font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 5px 14px rgba(84,87,230,.3);transition:all .2s;}
+.search-big button:hover{transform:translateY(-1px);}
+.rcard{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:24px;box-shadow:var(--sh2);}
+.rc-hd{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;}
+.rc-num{font-size:24px;font-weight:800;font-family:var(--mono);}
+.rc-st{font-size:13px;color:var(--muted);margin-top:4px;}
+.rc-bdg{display:flex;flex-direction:column;align-items:flex-end;gap:6px;}
+.src-o{background:var(--blue-light);color:var(--blue);border:1px solid #bcd4fe;padding:3px 11px;border-radius:20px;font-size:11px;font-weight:600;}
+.src-c{background:var(--green-light);color:var(--green);border:1px solid #92e3bd;padding:3px 11px;border-radius:20px;font-size:11px;font-weight:600;}
+.rc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.rc-f{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r2);padding:10px 12px;}
+.rc-fl{font-size:10px;color:var(--muted2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;font-weight:600;}
+.rc-fv{font-size:13px;font-weight:500;word-break:break-word;}
+.rc-desc{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r2);padding:13px 15px;margin-top:11px;font-size:12.5px;color:var(--muted);line-height:1.7;}
+.no-res{text-align:center;padding:60px;color:var(--muted);}
+.no-res .ic{font-size:42px;margin-bottom:12px;}
+
+/* ANALYSIS / PIVOT */
+.pivot-builder{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:18px;box-shadow:var(--sh);}
+.pb-title{font-size:14px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.pb-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;}
+.pb-field label{display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;}
+.pb-field select{width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r2);
+  padding:9px 11px;color:var(--text);font-family:var(--font);font-size:13px;cursor:pointer;outline:none;}
+.pb-field select:focus{border-color:var(--accent);}
+.pb-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;}
+.pivot-result{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh);}
+.pivot-table{width:100%;border-collapse:collapse;font-size:12.5px;}
+.pivot-table th{background:var(--accent);color:#fff;padding:10px 13px;text-align:left;font-weight:600;font-size:11.5px;position:sticky;top:0;}
+.pivot-table th.num,.pivot-table td.num{text-align:right;font-family:var(--mono);}
+.pivot-table td{padding:8px 13px;border-bottom:1px solid var(--border);}
+.pivot-table tr:hover{background:var(--surface2);}
+.pivot-table .grand{background:var(--accent-light);font-weight:700;}
+.pivot-table .grand td{border-top:2px solid var(--accent);}
+.heat{display:inline-block;padding:2px 8px;border-radius:6px;font-family:var(--mono);font-size:11.5px;}
+
+/* EXCEL-STYLE FILTER DROPDOWN */
+.fdrop{position:relative;display:inline-block;}
+.fdrop-btn{background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r2);padding:6px 10px;
+  font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;color:var(--text);font-family:var(--font);}
+.fdrop-btn:hover{border-color:var(--accent);}
+.fdrop-btn.has-filter{border-color:var(--accent);background:var(--accent-light);color:var(--accent);font-weight:600;}
+.fdrop-panel{position:absolute;top:calc(100% + 4px);left:0;background:#fff;border:1.5px solid var(--border2);border-radius:var(--r2);
+  box-shadow:var(--sh2);z-index:500;width:240px;display:none;padding:10px;}
+.fdrop-panel.open{display:block;}
+.fdrop-search{width:100%;border:1.5px solid var(--border);border-radius:6px;padding:6px 9px;font-size:12px;margin-bottom:8px;outline:none;font-family:var(--font);}
+.fdrop-list{max-height:220px;overflow-y:auto;}
+.fdrop-item{display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:5px;cursor:pointer;font-size:12.5px;}
+.fdrop-item:hover{background:var(--surface2);}
+.fdrop-item input{cursor:pointer;}
+.fdrop-foot{display:flex;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);}
+
+/* UPLOAD */
+.upbox{background:var(--surface);border:2px dashed var(--border2);border-radius:var(--r);padding:22px;margin-bottom:18px;transition:border-color .2s;}
+.upbox:hover{border-color:var(--accent);}
+.upin{text-align:center;padding:18px;cursor:pointer;}
+.upin input[type=file]{display:none;}
+.upin .ic{font-size:34px;margin-bottom:8px;}
+.upin p{color:var(--muted);font-size:13px;}
+.upin .ht{font-size:11px;color:var(--muted2);margin-top:4px;}
+.reset-strip{display:flex;align-items:center;gap:8px;background:var(--green-light);border:1px solid #92e3bd;border-radius:var(--r2);
+  padding:10px 14px;font-size:12px;color:var(--green);margin-top:12px;font-weight:500;}
+.info-strip{display:flex;align-items:center;gap:8px;background:var(--blue-light);border:1px solid #bcd4fe;border-radius:var(--r2);
+  padding:10px 14px;font-size:12px;color:var(--blue);margin-top:12px;font-weight:500;}
+
+/* CONNECT BANNER */
+.conn-banner{display:flex;align-items:center;gap:12px;padding:11px 16px;border-radius:var(--r);margin-bottom:18px;font-size:13px;}
+.conn-on{background:var(--green-light);border:1px solid #92e3bd;color:var(--green);}
+.conn-off{background:var(--amber-light);border:1px solid #fbe1a8;color:var(--amber);}
+.conn-dot{width:9px;height:9px;border-radius:50%;}
+.conn-on .conn-dot{background:var(--green);box-shadow:0 0 0 3px rgba(10,157,99,.2);}
+.conn-off .conn-dot{background:var(--amber);box-shadow:0 0 0 3px rgba(217,119,6,.2);}
+
+/* TOAST + LOADER */
+.toast{position:fixed;bottom:24px;right:24px;background:#fff;border:1.5px solid var(--border);border-radius:var(--r);
+  padding:13px 18px;font-size:13px;font-weight:500;box-shadow:var(--sh2);z-index:9999;transform:translateY(80px);opacity:0;transition:all .3s;max-width:330px;}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast.ok{border-color:#92e3bd;color:var(--green);}
+.toast.err{border-color:#f4a9a9;color:var(--red);}
+.loader{display:inline-block;width:15px;height:15px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.ref-tag{font-size:11px;color:var(--muted2);background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 11px;}
+.spin-overlay{position:fixed;inset:0;background:rgba(238,240,251,.7);display:flex;align-items:center;justify-content:center;z-index:8000;flex-direction:column;gap:14px;}
+.spin-big{width:38px;height:38px;border:3px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
+
+/* MODALS */
+.modal-overlay{position:fixed;inset:0;background:rgba(27,26,64,.45);display:flex;align-items:center;justify-content:center;z-index:9000;padding:20px;}
+.modal{background:#fff;border-radius:var(--r);width:560px;max-width:96vw;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:var(--sh2);}
+.modal-hd{padding:16px 20px;border-bottom:1.5px solid var(--border);font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:space-between;background:var(--surface2);}
+.modal-x{background:none;border:none;font-size:18px;cursor:pointer;color:var(--muted);}
+.modal-body{padding:20px;overflow-y:auto;}
+.modal-ft{padding:14px 20px;border-top:1.5px solid var(--border);display:flex;gap:8px;justify-content:flex-end;background:var(--surface2);}
+.vm-info{background:var(--accent-light);border:1px solid var(--border);border-radius:var(--r2);padding:12px;margin-bottom:16px;font-size:13px;}
+.vm-info b{color:var(--accent2);}
+.fpv{margin-top:6px;font-size:11px;color:var(--green);}
+.fpv img{max-height:60px;border-radius:5px;margin-top:5px;border:1px solid var(--border);}
+.modal-body .field input[type=file]{padding:8px;background:var(--surface2);border:1.5px dashed var(--border2);cursor:pointer;}
+/* row checkbox for bulk */
+.rowchk{width:15px;height:15px;cursor:pointer;}
+.bulkbar{display:flex;align-items:center;gap:10px;padding:10px 15px;background:var(--accent-light);border-bottom:1.5px solid var(--border);font-size:13px;}
+.bulkbar.hidden{display:none;}
+.doc-link{color:var(--accent);text-decoration:none;font-size:11px;font-weight:600;}
+.doc-link:hover{text-decoration:underline;}
+.req-badge{background:var(--amber-light);color:var(--amber);border:1px solid #fbe1a8;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;}
+@media(max-width:900px){.sgrid{grid-template-columns:1fr;}.rc-grid{grid-template-columns:1fr 1fr;}}
+</style>
+</head>
+<body>
+<!-- LOGIN -->
+<div id="login">
+  <div class="login-card">
+    <div class="brand">
+      <div class="brand-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/></svg></div>
+      <div class="brand-tx"><div class="nm">Lenskart</div><div class="sb">Maintenance Ticket Portal</div></div>
+    </div>
+    <h2>Welcome back</h2>
+    <p class="tag">Sign in with your registered email to access your tickets.</p>
+    <div id="lerr" class="login-err hidden">⚠️ <span id="lerrmsg"></span></div>
+    <div class="field"><label>Email address</label><input type="email" id="lemail" placeholder="your.name@lenskart.com"></div>
+    <div class="field"><label>Password</label><input type="password" id="lpass" placeholder="••••••••"></div>
+    <button class="btn-primary" onclick="doLogin()">Sign in →</button>
+    <div class="login-hint"><p><b>Default passwords:</b> firstname@lk &nbsp;|&nbsp; Admin: <b>admin@lk123</b><br>Example: Chandan → <b>chandan@lk</b> · Ajay → <b>ajay@lk</b></p></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" class="hidden">
+  <div class="topbar">
+    <div class="tb-brand"><div class="tb-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/></svg></div><span class="tb-nm">Maintenance Portal</span></div>
+    <div class="tb-sep"></div>
+    <nav class="navbar">
+      <button class="nav-btn active" id="nb-open" onclick="showTab('open')">📋 Open Tickets <span class="nbadge" id="nb-o">0</span></button>
+      <button class="nav-btn" id="nb-closed" onclick="showTab('closed')">✅ Closed Tickets <span class="nbadge g" id="nb-c">0</span></button>
+      <button class="nav-btn" id="nb-summary" onclick="showTab('summary')">📊 Summary</button>
+      <button class="nav-btn" id="nb-analysis" onclick="showTab('analysis')">📈 Analysis</button>
+      <button class="nav-btn" id="nb-search" onclick="showTab('search')">🔍 Search</button>
+      <button class="nav-btn" id="nb-assigned" onclick="showTab('assigned')">📑 Assigned Details</button>
+      <button class="nav-btn" id="nb-closures" onclick="showTab('closures')">📥 Closure Requests <span class="nbadge" id="nb-clr">0</span></button>
+      <button class="nav-btn" id="nb-wbr" onclick="showTab('wbr')">📅 WBR Tickets</button>
+      <button class="nav-btn" id="nb-billing" onclick="showTab('billing')">🧾 Billing</button>
+      <button class="nav-btn hidden" id="nb-vendormgmt" onclick="showTab('vendormgmt')">🏢 Vendors</button>
+      <button class="nav-btn hidden" id="nb-vendor" onclick="showTab('vendor')">🔧 My Assigned Work</button>
+      <button class="nav-btn" id="nb-admin" onclick="showTab('admin')">⚙️ Admin</button>
+    </nav>
+    <div class="tb-right">
+      <div class="qs"><span style="color:var(--muted2);font-size:13px">🔍</span><input type="text" id="qsinp" placeholder="Quick search case #..." oninput="quickSearch(this.value)"></div>
+      <div class="upill"><div class="uav" id="uav">ME</div><div><div class="unm" id="unm">User</div><div class="url" id="url">Role</div></div></div>
+      <button class="lo-btn" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <!-- SUBNAV with BACK -->
+  <div class="subnav">
+    <button class="back-btn" id="backBtn" onclick="goBack()">← Back</button>
+    <span class="crumb">Maintenance Portal / <b id="crumb-now">Open Tickets</b></span>
+    <div class="subnav-right">
+      <span class="ref-tag" id="ref-info"></span>
+      <button class="btn-sm btn-accent" onclick="refreshData()" id="refreshBtn">↻ Refresh from Sheet</button>
+    </div>
+  </div>
+
+  <!-- ===== OPEN ===== -->
+  <div id="pg-open" class="content">
+    <div id="conn-banner"></div>
+    <div class="phdr"><div><div class="ptitle" id="open-ttl">Open Tickets</div><div class="psub" id="open-sub">Loading...</div></div></div>
+    <div class="stats" id="open-stats"></div>
+    <div class="tbl-wrap">
+      <div class="toolbar">
+        <span class="tbl-title">Ticket List</span>
+        <input class="fsearch" id="of-txt" placeholder="Search case, store, ME..." oninput="filterOpen()">
+        <div class="fdrop"><button class="fdrop-btn" id="fb-reg" onclick="toggleFdrop('reg')">Region ▾</button><div class="fdrop-panel" id="fp-reg"></div></div>
+        <div class="fdrop"><button class="fdrop-btn" id="fb-me" onclick="toggleFdrop('me')">ME ▾</button><div class="fdrop-panel" id="fp-me"></div></div>
+        <div class="fdrop"><button class="fdrop-btn" id="fb-issue" onclick="toggleFdrop('issue')">Issue ▾</button><div class="fdrop-panel" id="fp-issue"></div></div>
+        <div class="fdrop"><button class="fdrop-btn" id="fb-status" onclick="toggleFdrop('status')">Status ▾</button><div class="fdrop-panel" id="fp-status"></div></div>
+        <button class="btn-sm" onclick="clearAllFilters()">✕ Clear</button>
+        <div class="export-grp" style="margin-left:auto">
+          <button class="btn-sm btn-green" onclick="exportData('open','xlsx')">⬇ Excel</button>
+          <button class="btn-sm btn-red-o" onclick="exportData('open','pdf')">⬇ PDF</button>
+        </div>
+      </div>
+      <div class="tscroll"><table><thead><tr>
+        <th>Case #</th><th>Store</th><th>Region</th><th>ME</th><th>Issue</th><th>Age</th><th>TAT</th>
+        <th style="min-width:140px">ETA (DD-MM-YYYY)</th><th style="min-width:120px">Vendor</th>
+        <th style="min-width:110px">Remarks</th><th style="min-width:105px">Vendor AC#</th>
+        <th style="min-width:150px">Status</th><th>Save</th>
+      </tr></thead><tbody id="open-body"></tbody></table></div>
+      <div class="pgn" id="open-pgn"></div>
+    </div>
+  </div>
+
+  <!-- ===== CLOSED ===== -->
+  <div id="pg-closed" class="content hidden">
+    <div class="phdr"><div><div class="ptitle" id="closed-ttl">Closed Tickets</div><div class="psub" id="closed-sub">All resolved/closed tickets. Use the calendar to view closures for a specific date, week, or month.</div></div></div>
+    <div class="stats" id="closed-stats"></div>
+    <div class="tbl-wrap">
+      <div class="toolbar">
+        <span class="tbl-title">Closed Tickets</span>
+        <input class="fsearch" id="cf-txt" placeholder="Search..." oninput="filterClosed()">
+        <select class="fsel" id="cf-grain" onchange="renderClosed()">
+          <option value="">All Dates</option><option value="day">Specific Day</option><option value="week">Week</option><option value="month">Month</option>
+        </select>
+        <input class="fsearch" type="date" id="cf-date" style="width:150px" onchange="renderClosed()">
+        <div class="fdrop"><button class="fdrop-btn" id="fb-creg" onclick="toggleFdrop('creg')">Region ▾</button><div class="fdrop-panel" id="fp-creg"></div></div>
+        <div class="fdrop"><button class="fdrop-btn" id="fb-cissue" onclick="toggleFdrop('cissue')">Issue ▾</button><div class="fdrop-panel" id="fp-cissue"></div></div>
+        <button class="btn-sm" onclick="clearClosedDate()">✕ Clear Date</button>
+        <div class="export-grp" style="margin-left:auto">
+          <button class="btn-sm btn-green" onclick="exportData('closed','xlsx')">⬇ Excel</button>
+          <button class="btn-sm btn-red-o" onclick="exportData('closed','pdf')">⬇ PDF</button>
+        </div>
+      </div>
+      <div class="tscroll"><table><thead><tr>
+        <th>Case #</th><th>Store</th><th>Region</th><th>ME</th><th>Issue</th><th>ETA Given</th><th>Vendor</th><th>Remarks</th><th>Amount</th><th>Documents</th><th>Age</th><th>Closed At</th>
+      </tr></thead><tbody id="closed-body"></tbody></table></div>
+      <div class="pgn" id="closed-pgn"></div>
+    </div>
+  </div>
+  <!-- ===== SUMMARY ===== -->
+  <div id="pg-summary" class="content hidden">
+    <div class="phdr"><div><div class="ptitle">Summary Dashboard</div><div class="psub">Region · ME · Issue · Ageing breakdown</div></div>
+      <div class="export-grp">
+        <button class="btn-sm" onclick="buildSummary()">↻ Refresh</button>
+        <button class="btn-sm btn-green" onclick="exportSummary('xlsx')">⬇ Excel</button>
+        <button class="btn-sm btn-red-o" onclick="exportSummary('pdf')">⬇ PDF</button>
+        <button class="btn-sm btn-accent" onclick="exportSummary('pptx')">⬇ PPT</button>
+      </div>
+    </div>
+    <div class="stats" id="sum-top"></div>
+    <div class="sgrid"><div class="sum-card" id="s-region"></div><div class="sum-card" id="s-me"></div><div class="sum-card" id="s-issue"></div><div class="sum-card" id="s-age"></div></div>
+  </div>
+
+  <!-- ===== ANALYSIS / PIVOT ===== -->
+  <div id="pg-analysis" class="content hidden">
+    <div class="phdr"><div><div class="ptitle">Analysis & Pivot</div><div class="psub">Build custom pivot tables — choose rows, columns and values like Excel</div></div></div>
+    <div class="pivot-builder">
+      <div class="pb-title">⚙️ Pivot Builder</div>
+      <div class="pb-grid">
+        <div class="pb-field"><label>Data Source</label><select id="pv-src"><option value="open">Open Tickets</option><option value="closed">Closed Tickets</option><option value="all">Open + Closed</option></select></div>
+        <div class="pb-field"><label>Rows (Group by)</label><select id="pv-row"></select></div>
+        <div class="pb-field"><label>Columns (Split by)</label><select id="pv-col"><option value="">— None —</option></select></div>
+        <div class="pb-field"><label>Value</label><select id="pv-val"><option value="count">Count of Tickets</option><option value="ageing_avg">Avg Ageing (days)</option><option value="ageing_max">Max Ageing (days)</option></select></div>
+      </div>
+      <div class="pb-actions">
+        <button class="btn-sm btn-accent" onclick="buildPivot()">▶ Generate Pivot</button>
+        <button class="btn-sm btn-green" onclick="exportPivot('xlsx')">⬇ Excel</button>
+        <button class="btn-sm btn-red-o" onclick="exportPivot('pdf')">⬇ PDF</button>
+        <button class="btn-sm btn-accent" onclick="exportPivot('pptx')">⬇ PPT</button>
+      </div>
+    </div>
+    <div class="pivot-result" id="pivot-out"><div style="padding:40px;text-align:center;color:var(--muted)">Choose your fields above and click <b>Generate Pivot</b></div></div>
+  </div>
+
+  <!-- ===== SEARCH ===== -->
+  <div id="pg-search" class="content hidden">
+    <div class="phdr"><div><div class="ptitle">Ticket Search</div><div class="psub">Search any case number across all tickets — open and closed history</div></div></div>
+    <div class="search-big"><input id="srch-inp" placeholder="Enter case / ticket number e.g. 118139978" onkeyup="if(event.key==='Enter')doSearch()"><button onclick="doSearch()">Search →</button></div>
+    <div id="srch-result"></div>
+  </div>
+
+  <!-- ===== ASSIGNED DETAILS (clean read-only) ===== -->
+  <div id="pg-assigned" class="content hidden">
+    <div class="phdr"><div><div class="ptitle">Assigned Ticket Details</div><div class="psub">Clean read-only view — ETA, Vendor, Remarks filled by MEs. Filter by date, region, vendor, ME and more.</div></div>
+      <div class="export-grp">
+        <button class="btn-sm btn-green" onclick="exportData('assigned','xlsx')">⬇ Excel</button>
+        <button class="btn-sm btn-red-o" onclick="exportData('assigned','pdf')">⬇ PDF</button>
+      </div>
+    </div>
+    <div class="stats" id="asg-stats"></div>
+    <div class="tbl-wrap">
+      <div class="toolbar">
+        <span class="tbl-title">Assigned Tickets</span>
+        <input class="fsearch" id="asg-txt" placeholder="Search..." oninput="renderAssigned()">
+        <select class="fsel" id="asg-datemode" onchange="renderAssigned()">
+          <option value="">All Dates</option><option value="created">By Created Date</option><option value="closed">By Closed Date</option>
+        </select>
+        <select class="fsel" id="asg-grain" onchange="renderAssigned()">
+          <option value="day">Specific Day</option><option value="week">Week</option><option value="month">Month</option>
+        </select>
+        <input class="fsearch" type="date" id="asg-date" style="width:150px" onchange="renderAssigned()">
+        <div class="fdrop"><button class="fdrop-btn" id="fb-areg" onclick="toggleFdrop('areg')">Region ▾</button><div class="fdrop-panel" id="fp-areg"></div></div>
+        <div class="fdrop"><button class="fdrop-btn" id="fb-avendor" onclick="toggleFdrop('avendor')">Vendor ▾</button><div class="fdrop-panel" id="fp-avendor"></div></div>
+        <div class="fdrop"><button class="fdrop-btn" id="fb-ame" onclick="toggleFdrop('ame')">ME ▾</button><div class="fdrop-panel" id="fp-ame"></div></div>
+        <div class="fdrop"><button class="fdrop-btn" id="fb-aissue" onclick="toggleFdrop('aissue')">Issue ▾</button><div class="fdrop-panel" id="fp-aissue"></div></div>
+        <button class="btn-sm" onclick="clearAssignedFilters()">✕ Clear</button>
+      </div>
+      <div class="bulkbar hidden" id="bulkbar">
+        <span><b id="bulk-count">0</b> selected</span>
+        <select class="fsel" id="bulk-status-sel"><option value="">Set status to...</option><option>Assigned</option><option>Awaiting Assignment</option><option>In Progress</option><option>Re-Open</option><option>Resolved</option><option>Closed</option></select>
+        <button class="btn-sm btn-accent" onclick="bulkStatus(document.getElementById('bulk-status-sel').value)">Apply Status</button>
+        <button class="btn-sm btn-red-o" onclick="bulkDelete()">🗑️ Delete Selected</button>
+        <button class="btn-sm" onclick="bulkSel.clear();renderAssigned();updateBulkBar()">Clear Selection</button>
+      </div>
+      <div class="tscroll"><table><thead><tr>
+        <th id="asg-chk-th" style="display:none"><input type="checkbox" class="rowchk" onchange="bulkSelectAllVisible(this.checked)"></th>
+        <th>Case #</th><th>Store</th><th>Region</th><th>ME</th><th>Issue</th>
+        <th>Created</th><th>ETA</th><th>Vendor</th><th>Vendor AC#</th><th>Remarks</th><th>Status</th><th>Closed At</th>
+      </tr></thead><tbody id="asg-body"></tbody></table></div>
+      <div class="pgn" id="asg-pgn"></div>
+    </div>
+  </div>
+
+  <!-- ===== VENDOR CLOSURE REQUESTS (ME/RH/Admin) ===== -->
+  <div id="pg-closures" class="content hidden">
+    <div class="phdr"><div><div class="ptitle">Vendor Closure Requests</div><div class="psub">Vendors submitted work for these tickets. Review the Job Sheet, Before & After photos, then Approve or Reject.</div></div></div>
+    <div class="stats" id="clr-stats"></div>
+    <div class="tbl-wrap">
+      <div class="toolbar"><span class="tbl-title">Pending Closure Requests</span>
+        <select class="fsel" id="clr-view" onchange="renderClosures()"><option value="Pending">Pending Only</option><option value="all">All (incl. approved/rejected)</option></select>
+        <input class="fsearch" id="clr-txt" placeholder="Search..." oninput="renderClosures()" style="margin-left:auto"></div>
+      <div class="tscroll"><table><thead><tr>
+        <th>Case #</th><th>Store</th><th>Region</th><th>ME</th><th>Vendor</th><th>Vendor ETA</th><th>Amount (₹)</th>
+        <th>Documents</th><th>Request</th><th>Action</th>
+      </tr></thead><tbody id="clr-body"></tbody></table></div>
+      <div class="pgn" id="clr-pgn"></div>
+    </div>
+  </div>
+
+  <!-- ===== WBR TICKETS (AC WBR / Signage WBR) ===== -->
+  <div id="pg-wbr" class="content hidden">
+    <div class="phdr"><div><div class="ptitle" id="wbr-ttl">WBR Tickets</div><div class="psub">Weekly Business Review — AC & Signage tickets. Edit ETA/Vendor/Remarks/AC/Status/First Visit Date with the Edit button.</div></div>
+      <div class="export-grp">
+        <button class="btn-sm btn-green" onclick="exportData('wbr','xlsx')">⬇ Excel</button>
+        <button class="btn-sm btn-red-o" onclick="exportData('wbr','pdf')">⬇ PDF</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <button class="btn-sm btn-accent" id="wbr-tab-ac" onclick="setWbrType('ac')">❄️ AC WBR</button>
+      <button class="btn-sm" id="wbr-tab-sig" onclick="setWbrType('sig')">🪧 Signage WBR</button>
+    </div>
+    <div class="stats" id="wbr-stats"></div>
+    <div class="tbl-wrap">
+      <div class="toolbar">
+        <span class="tbl-title" id="wbr-tbl-title">AC WBR Tickets</span>
+        <input class="fsearch" id="wbr-txt" placeholder="Search case, store, ME..." oninput="renderWbr()">
+        <div class="fdrop"><button class="fdrop-btn" id="fb-wreg" onclick="toggleFdrop('wreg')">Region ▾</button><div class="fdrop-panel" id="fp-wreg"></div></div>
+        <div class="fdrop"><button class="fdrop-btn" id="fb-wme" onclick="toggleFdrop('wme')">ME ▾</button><div class="fdrop-panel" id="fp-wme"></div></div>
+        <button class="btn-sm" onclick="clearWbrFilters()">✕ Clear</button>
+      </div>
+      <div class="tscroll"><table><thead><tr>
+        <th>Case #</th><th>Store</th><th>Region</th><th>ME</th><th>Issue</th><th>Age</th><th>TAT</th>
+        <th style="min-width:130px">ETA</th><th style="min-width:130px">Vendor</th><th style="min-width:110px">Remarks</th>
+        <th style="min-width:95px">Vendor AC#</th><th style="min-width:140px">Status</th>
+        <th style="min-width:130px">First Visit Date</th><th>Edit/Save</th>
+      </tr></thead><tbody id="wbr-body"></tbody></table></div>
+      <div class="pgn" id="wbr-pgn"></div>
+    </div>
+  </div>
+
+  <!-- ===== BILLING ===== -->
+  <div id="pg-billing" class="content hidden">
+    <div class="phdr"><div><div class="ptitle">Billing</div><div class="psub">Upload billing sheet — saved to the "billings" tab in Google Sheet</div></div>
+      <div class="export-grp">
+        <button class="btn-sm btn-green" onclick="exportData('billing','xlsx')">⬇ Excel</button>
+        <button class="btn-sm btn-red-o" onclick="exportData('billing','pdf')">⬇ PDF</button>
+      </div>
+    </div>
+    <div class="upbox">
+      <h3 style="font-size:14px;font-weight:700;margin-bottom:4px">🧾 Upload Billing Sheet</h3>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Upload billing Excel/CSV. Rows are appended to the <b>billings</b> sheet in Google Sheets.</p>
+      <div class="upin" onclick="document.getElementById('bill-file').click()">
+        <input type="file" id="bill-file" accept=".xlsx,.xls,.csv" onchange="handleBillingUpload(this)">
+        <div class="ic">📁</div><p>Click to select billing Excel or CSV file</p><p class="ht">First row = column headers</p>
+      </div>
+      <div class="info-strip">💡 Billing data is stored separately from tickets — it never affects open/closed counts</div>
+    </div>
+    <div class="tbl-wrap" id="bill-table-wrap" style="display:none">
+      <div class="toolbar"><span class="tbl-title">Billing Records</span><input class="fsearch" id="bill-txt" placeholder="Search billing..." oninput="renderBilling()"></div>
+      <div class="tscroll"><table><thead id="bill-head"></thead><tbody id="bill-body"></tbody></table></div>
+      <div class="pgn" id="bill-pgn"></div>
+    </div>
+  </div>
+
+  <!-- ===== ADMIN ===== -->
+  <div id="pg-admin" class="content hidden">
+    <div class="phdr"><div><div class="ptitle">Admin Panel</div><div class="psub">Upload daily tickets · Manage MEs · Connection setup</div></div></div>
+    <div class="upbox">
+      <h3 style="font-size:14px;font-weight:700;margin-bottom:4px">📤 Upload Today's Tickets</h3>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Upload daily Excel/CSV. Rows added to the single ticket sheet — status decides open vs closed automatically.</p>
+      <div class="upin" onclick="document.getElementById('tk-file').click()">
+        <input type="file" id="tk-file" accept=".xlsx,.xls,.csv" onchange="handleTicketUpload(this)">
+        <div class="ic">📁</div><p>Click to select ticket Excel or CSV file</p><p class="ht">Columns must match portal format (A–Y)</p>
+      </div>
+      <div class="reset-strip">🕗 One sheet = data center. Status Assigned/Awaiting/Re-Open → Open · Resolved/Closed → Closed</div>
+    </div>
+    <div class="tbl-wrap">
+      <div class="toolbar"><span class="tbl-title">Registered Maintenance Executives</span>
+        <button class="btn-sm btn-green" style="margin-left:auto" onclick="exportMEs()">⬇ Excel</button></div>
+      <div class="tscroll"><table><thead><tr><th>#</th><th>Full Name</th><th>First Name</th><th>Region</th><th>RH</th><th>Email</th><th>Contact</th></tr></thead><tbody id="me-body"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- ===== VENDOR MANAGEMENT (Admin) ===== -->
+  <div id="pg-vendormgmt" class="content hidden">
+    <div class="phdr"><div><div class="ptitle">Vendor Management</div><div class="psub">Register new vendors · View logins · Username = Vendor Code, Password = Vendor Code</div></div>
+      <button class="btn-sm btn-green" onclick="exportVendors()">⬇ Export Logins</button>
+    </div>
+    <div class="upbox" style="border-style:solid">
+      <h3 style="font-size:14px;font-weight:700;margin-bottom:10px">➕ Register New Vendor</h3>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+        <div><label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:5px;text-transform:uppercase">Vendor Code</label>
+          <input class="fsearch" id="nv-code" placeholder="e.g. VEND09999" style="width:200px"></div>
+        <div><label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:5px;text-transform:uppercase">Vendor Name</label>
+          <input class="fsearch" id="nv-name" placeholder="Full vendor name" style="width:280px"></div>
+        <button class="btn-sm btn-accent" style="padding:8px 18px" onclick="registerVendor()">➕ Add Vendor</button>
+        <span style="font-size:11px;color:var(--muted)">If code is blank, one is auto-generated from the name.</span>
+      </div>
+      <div class="info-strip" style="margin-top:12px">💡 New vendors save to the "Vendors" sheet. Login = code / code. Share credentials from the Export button.</div>
+    </div>
+    <div class="tbl-wrap">
+      <div class="toolbar"><span class="tbl-title">Registered Vendors</span>
+        <input class="fsearch" id="vm-txt" placeholder="Search vendor..." oninput="renderVendorMgmt()" style="margin-left:auto"></div>
+      <div class="tscroll"><table><thead><tr><th>#</th><th>Vendor Code</th><th>Vendor Name</th><th>Username</th><th>Password</th><th>Assigned</th><th>Closure Req</th><th>Closed</th><th>Amount</th></tr></thead><tbody id="vm-body"></tbody></table></div>
+      <div class="pgn" id="vm-pgn"></div>
+    </div>
+  </div>
+
+  <!-- ===== VENDOR PORTAL (vendor login) ===== -->
+  <div id="pg-vendor" class="content hidden">
+    <div class="phdr"><div><div class="ptitle" id="ven-ttl">My Assigned Work</div><div class="psub">Tickets assigned to you by Lenskart. Fill ETA, upload Job Sheet + Before + After photos, then request closure.</div></div></div>
+    <div class="stats" id="ven-stats"></div>
+    <div class="tbl-wrap">
+      <div class="toolbar"><span class="tbl-title">Assigned Tickets</span>
+        <input class="fsearch" id="ven-txt" placeholder="Search..." oninput="renderVendor()"></div>
+      <div class="tscroll"><table><thead><tr>
+        <th>Case #</th><th>Store</th><th>Region</th><th>Issue</th><th>Detail</th><th>Store Phone</th><th>Status</th><th>Action</th>
+      </tr></thead><tbody id="ven-body"></tbody></table></div>
+      <div class="pgn" id="ven-pgn"></div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<!-- VENDOR WORK MODAL -->
+<div id="ven-modal" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-hd"><span id="vm-title">Submit Work</span><button class="modal-x" onclick="closeVenModal()">✕</button></div>
+    <div class="modal-body">
+      <div id="vm-ticket-info" class="vm-info"></div>
+      <div class="field"><label>Vendor ETA (DD-MM-YYYY)</label><input type="text" id="vm-eta" placeholder="DD-MM-YYYY" maxlength="10" oninput="etaFormat(this)"></div>
+      <div class="field"><label>Ticket Amount (₹)</label><input type="number" id="vm-amount" placeholder="e.g. 2500" min="0"></div>
+      <div class="field"><label>Job Sheet <span style="color:var(--red)">*</span></label><input type="file" id="vm-job" accept="image/*,application/pdf" onchange="previewFile(this,'pv-job')"><div class="fpv" id="pv-job"></div></div>
+      <div class="field"><label>Before Work Snap <span style="color:var(--red)">*</span></label><input type="file" id="vm-before" accept="image/*" onchange="previewFile(this,'pv-before')"><div class="fpv" id="pv-before"></div></div>
+      <div class="field"><label>After Work Snap <span style="color:var(--red)">*</span></label><input type="file" id="vm-after" accept="image/*" onchange="previewFile(this,'pv-after')"><div class="fpv" id="pv-after"></div></div>
+      <div class="field"><label>New Status</label><select id="vm-status" class="edit-sel"><option value="Resolved">Resolved</option><option value="Closed">Closed</option></select></div>
+      <div class="info-strip">All 3 files are mandatory. On submit, a <b>closure request</b> goes to the ME for approval.</div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn-sm" onclick="closeVenModal()">Cancel</button>
+      <button class="btn-sm btn-accent" id="vm-submit-btn" onclick="submitVendorWork()">📤 Request Closure</button>
+    </div>
+  </div>
+</div>
+
+<!-- ME CLOSURE APPROVAL MODAL -->
+<div id="appr-modal" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-hd"><span>Closure Request Review</span><button class="modal-x" onclick="closeApprModal()">✕</button></div>
+    <div class="modal-body" id="appr-body"></div>
+    <div class="modal-ft">
+      <button class="btn-sm" onclick="closeApprModal()">Cancel</button>
+      <button class="btn-sm btn-red-o" id="appr-reject" onclick="decideClosure(false)">✕ Reject</button>
+      <button class="btn-sm btn-green" id="appr-approve" onclick="decideClosure(true)">✓ Approve Closure</button>
+    </div>
+  </div>
+</div>
+<script>
+// ════════ CONFIG ════════
+const APPS_SCRIPT_URL='https://script.google.com/a/macros/lenskart.com/s/AKfycbzjPvfTzrd9pYyrbkDdbK4JYu-wlBpzDjsJBH2_gtBdF2xmx7SEAOCHWzKCO3uJXDR_1Q/exec';
+const SHEET_ID='1hieELgF8Z3kKzue9qGeOLZYLG8mgAJxlL0R0KX49oi0';
+
+// status mapping — single sheet acts as data center
+const OPEN_STATUSES=['assigned','awaiting assignment','awaiting for assignment','re-open','reopen','open','in progress'];
+const CLOSED_STATUSES=['resolved','closed','complete','completed'];
+function isOpenStatus(s){return OPEN_STATUSES.includes((s||'').trim().toLowerCase());}
+function isClosedStatus(s){return CLOSED_STATUSES.includes((s||'').trim().toLowerCase());}
+
+// ════════ USERS ════════
+const USERS=[
+ {email:'chandan.dasadhikary@lenskart.com',pass:'chandan@lk',name:'Chandan Dasadhikary',first:'Chandan',role:'ME',region:'East',rh:'Prabal Das'},
+ {email:'mohammad.ansari2@dealskart.in',pass:'ansari@lk',name:'Mohammad Ansari',first:'Ansari',role:'ME',region:'East',rh:'Prabal Das'},
+ {email:'suprotim.ghorai@lenskart.com',pass:'suprotim@lk',name:'Suprotim Ghorai',first:'Suprotim',role:'ME',region:'East',rh:'Prabal Das'},
+ {email:'ajay.vishwakarma@dealskart.in',pass:'ajay@lk',name:'Ajay Vishwakarma',first:'Ajay',role:'ME',region:'North',rh:'Naveen'},
+ {email:'chetan.dixit@dealskart.in',pass:'chetan@lk',name:'Chetan Dixit',first:'Chetan',role:'ME',region:'North',rh:'Naveen'},
+ {email:'harsh.singh2@lenskart.com',pass:'harsh@lk',name:'Harsh Singh',first:'Harsh',role:'ME',region:'North',rh:'Naveen'},
+ {email:'mdasif.gahlot@lenskart.com',pass:'mdasif@lk',name:'Mdasif Gahlot',first:'Mdasif',role:'ME',region:'North',rh:'Naveen'},
+ {email:'rohitas.singh@dealskart.in',pass:'rohitas@lk',name:'Rohitas Singh',first:'Rohitas',role:'ME',region:'North',rh:'Naveen'},
+ {email:'basavaraj.basavaraj@lenskart.com',pass:'basavaraj@lk',name:'Basavaraj Basavaraj',first:'Basavaraj',role:'ME',region:'South',rh:'Karthik AD'},
+ {email:'harisha.k@dealskart.in',pass:'harisha@lk',name:'Harisha A K',first:'Harisha',role:'ME',region:'South',rh:'Karthik AD'},
+ {email:'mohammed.shareef2@lenskart.com',pass:'shareef@lk',name:'Mohammed Shareef',first:'Shareef',role:'ME',region:'South',rh:'Karthik AD'},
+ {email:'mohammed.hussain@dealskart.in',pass:'azhar@lk',name:'Mohammed Azhar Hussain',first:'Azhar',role:'ME',region:'South',rh:'Karthik AD'},
+ {email:'mohammedsathik.abdul@lenskart.com',pass:'sathik@lk',name:'Mohammed Sathik Abdul',first:'Sathik',role:'ME',region:'South',rh:'Karthik AD'},
+ {email:'sachin.v@thelenskart.com',pass:'sachin@lk',name:'Sachin V',first:'Sachin',role:'ME',region:'South',rh:'Karthik AD'},
+ {email:'syed.abdulla2@lenskart.com',pass:'syed@lk',name:'Syed Abdulla',first:'Syed',role:'ME',region:'South',rh:'Karthik AD'},
+ {email:'udaya.k@dealskart.in',pass:'udaya@lk',name:'Udaya K',first:'Udaya',role:'ME',region:'South',rh:'Karthik AD'},
+ {email:'ugandhran.ugandhran@lenskart.com',pass:'ugandhran@lk',name:'Ugandhran Ugandhran',first:'Ugandhran',role:'ME',region:'South',rh:'Karthik AD'},
+ {email:'vivek.n@dealskart.in',pass:'vivek@lk',name:'Vivek N',first:'Vivek',role:'ME',region:'South',rh:'Karthik AD'},
+ {email:'anand.nagar@lenskart.com',pass:'anand@lk',name:'Anand Nagar',first:'Anand',role:'ME',region:'West',rh:'Regan Rodrigues'},
+ {email:'daniyalnarsing.mane@dealskart.in',pass:'daniyal@lk',name:'Daniyal Mane West',first:'Daniyal',role:'ME',region:'West',rh:'Regan Rodrigues'},
+ {email:'eknath.kashid@lenskart.com',pass:'eknath@lk',name:'Eknath Kashid',first:'Eknath',role:'ME',region:'West',rh:'Regan Rodrigues'},
+ {email:'ravi.kadam@dealskart.in',pass:'ravi@lk',name:'Ravi Kadam',first:'Ravi',role:'ME',region:'West',rh:'Regan Rodrigues'},
+ {email:'robin.mudaliar@dealskart.in',pass:'robin@lk',name:'Robin Mudaliar',first:'Robin',role:'ME',region:'West',rh:'Regan Rodrigues'},
+ {email:'shivam.sharma2@lenskart.com',pass:'shivam@lk',name:'Shivam Sharma',first:'Shivam',role:'ME',region:'West',rh:'Regan Rodrigues'},
+ {email:'soilkhan.pathan@dealskart.in',pass:'soilkhan@lk',name:'Soilkhan Pathan',first:'Soilkhan',role:'ME',region:'West',rh:'Regan Rodrigues'},
+ {email:'probal.das@lenskart.com',pass:'prabal@lk',name:'Prabal Das',first:'Prabal',role:'RH',region:'East',rh:'Prabal Das'},
+ {email:'naveen.thakur@dealskart.in',pass:'naveen@lk',name:'Naveen Thakur',first:'Naveen',role:'RH',region:'North',rh:'Naveen'},
+ {email:'regan.rodrigues@dealskart.in',pass:'regan@lk',name:'Regan Rodrigues',first:'Regan',role:'RH',region:'West',rh:'Regan Rodrigues'},
+ {email:'karthik.ad@lenskart.com',pass:'karthik@lk',name:'Karthik AD',first:'Karthik',role:'RH',region:'South',rh:'Karthik AD'},
+ {email:'ujjwal.mistry@lenskart.com',pass:'admin@lk123',name:'Ujjwal Mistry',first:'Ujjwal',role:'Admin',region:'HO',rh:''},
+ {email:'sanjeev.saini@lenskart.com',pass:'sanjeev@lk',name:'Sanjeev Saini',first:'Sanjeev',role:'HO',region:'HO',rh:''},
+ {email:'prashant.saini@lenskart.com',pass:'prashant@lk',name:'Prashanth Saini',first:'Prashanth',role:'HO',region:'HO',rh:''},
+ {email:'rohit.kumar5@lenskart.com',pass:'rohit@lk',name:'Rohit Kumar',first:'Rohit',role:'HO',region:'HO',rh:''},
+ {email:'anuj.dubey@lenskart.com',pass:'anuj@lk',name:'Anuj Dubey',first:'Anuj',role:'HO',region:'HO',rh:''},
+];
+
+// ════════ VENDORS (101 from vendor_details.xlsx) — username=code, password=code ════════
+const VENDORS=[
+ {code:'VEND04867',name:'A PLUS POWER SYSTEM'},
+ {code:'VEND05251',name:'Adcon Associates'},
+ {code:'VEND06688',name:'ADFER SOLUTIONS'},
+ {code:'DKVEND10294',name:'AFU TECHNOLOGIES PRIVATE LIMITED'},
+ {code:'DKVEND10353',name:'AK ENTERPRISES'},
+ {code:'DKVEND10283',name:'ALL CARE SERVICE'},
+ {code:'DKVEND10771',name:'AMR INTERIOR'},
+ {code:'VEND05826',name:'ANG INLINE P LTD'},
+ {code:'VEND05600',name:'B M ELECTRICAL & ENGINEERING WORKS'},
+ {code:'DKVEND11000',name:'BRAND PULSE CREATIVES PRIVATE LIMITED'},
+ {code:'VEND05187',name:'CARE TECHNICAL AND FACILITY SERVICES PVT LTD'},
+ {code:'VEND05713',name:'Channelplay Limited'},
+ {code:'VEND05248',name:'CITY ENGINEERING ENTERPRISES (BAZI J)'},
+ {code:'DKVEND10644',name:'CITY SERVICE'},
+ {code:'VEND05215',name:'CLOVE INTERIO'},
+ {code:'VEND04846',name:'CREATIVE SIGNAGE'},
+ {code:'VEND06773',name:'CREDULITY PROJECTS'},
+ {code:'DKVEND10643',name:'DEDICATED MANAGEMENT SERVICES'},
+ {code:'DKVEND10423',name:'ELECTROTEK SYSTEMS'},
+ {code:'VEND05347',name:'ENTENTE RETAIL FIXTURES PVT, LTD.'},
+ {code:'VEND06689',name:'FINANCIAL INCLUSION FACILITATORS'},
+ {code:'VEND00658',name:'FINE VISION-Optical Ophthalmic Instruments & Lense'},
+ {code:'VEND06131',name:'FIX IT SOLUTIONS'},
+ {code:'VEND023552',name:'Gagana Air Conditioner'},
+ {code:'DKVEND2082',name:'GDA INFRA SOLUTIONS'},
+ {code:'DKVEND10776',name:'GIGFORCE PRIVATE LIMITED'},
+ {code:'VEND05620',name:'Giri service &amp; provider'},
+ {code:'VEND06112',name:'ICLEAN SERVICES PVT LTD'},
+ {code:'VEND04593',name:'INBYON'},
+ {code:'VEND04797',name:'JOY ENTERPRISE'},
+ {code:'DkVEND10842',name:'K SQUARE ADVERTISING'},
+ {code:'DKVEND10434',name:'KANAPADY ENTERPRISES'},
+ {code:'VEND04746',name:'KINGSMEN INDIA PRIVATE LIMITED'},
+ {code:'VEND04460',name:'KIRTI INTEGRATED SOLUTIONS INDIA PVT LTD'},
+ {code:'VEND04471',name:'KK PROJECTS & ENGINEERING'},
+ {code:'VEND05825',name:'LOHITH ADS PVT LTD'},
+ {code:'VEND05393',name:'M AND C ASSOCIATES'},
+ {code:'DKVEND10263',name:'M/S ENKON PRIVATE LIMITED'},
+ {code:'VEND05557',name:'M/S TRENDGEN WORLD'},
+ {code:'DKVEND10531',name:'MECH SKILLZ ENGINEERING SOLUTIONS PRIVATE'},
+ {code:'VEND05363',name:'MEDICARE SURGICAL'},
+ {code:'VEND02538',name:'MEDICURE INSTRUMENTS'},
+ {code:'VEND00152',name:'Mehra Eyetech Pvt Ltd'},
+ {code:'VEND06721',name:'MISTRYMEN SERVICES PVT LTD'},
+ {code:'VEND04988',name:'MP Services'},
+ {code:'VEND05565',name:'M S Enterprises'},
+ {code:'DKVEND10810',name:'NAVRANG DIGITALS'},
+ {code:'VEND05660',name:'NK ENGINEERS'},
+ {code:'VEND05858',name:'Novateur'},
+ {code:'VEND06714',name:'ONENESS FACILITY MANAGEMENT'},
+ {code:'VEND05824',name:'P AND B TECHNOSERVICES'},
+ {code:'DKVEND2037',name:'PAVON FACILITIES SERVICES PRIVATE LIMITED'},
+ {code:'VEND05086',name:'PERFECTION24X7'},
+ {code:'VEND06676',name:'PEST SHIELDS INDIA PRIVATE LIMITED'},
+ {code:'VEND01107',name:'Plantech Medical Systems Pvt Ltd'},
+ {code:'VEND05889',name:'Pyramid Solutions'},
+ {code:'DKVEND10379',name:'R CONSTRUCTION'},
+ {code:'DKVEND2043',name:'RADHEY PUBLICITY'},
+ {code:'VEND03530',name:'Rama Rolling Shutter Industries'},
+ {code:'VEND06196',name:'RISA JYOTI INTEGRATED SOLUTIONS PRIVATE LIMITED'},
+ {code:'VEND06719',name:'RIYA ENTERPRISES'},
+ {code:'VEND05653',name:'Rolltech Rolling Shutters'},
+ {code:'DKVEND10432',name:'SAI BALAJI DIGITALS PRIVATE LIMITED'},
+ {code:'DKVEND10313',name:'SAI COOL SERVICES'},
+ {code:'DkVEND10838',name:'Sai Infratech'},
+ {code:'VEND05899',name:'SANIKA SIGN & GRAPHICS'},
+ {code:'DKVEND11172',name:'SARITHA ENTERPRISES(TS)'},
+ {code:'VEND06431',name:'SECURE LIFE INTERIOR & EXTERIOR'},
+ {code:'VEND06690',name:'SHANMUGA ENTERPRISES'},
+ {code:'VEND06722',name:'SHREYAS ENTERPRISES'},
+ {code:'VEND06726',name:'SIGN O SIGN DESIGNS (CHENNAI) PVT LTD'},
+ {code:'VEND05218',name:'Signage Solutions'},
+ {code:'DKVEND11195',name:'SIRI ENTERPRISES'},
+ {code:'VEND06813',name:'SJA DEVELOPERS'},
+ {code:'VEND05224',name:'SONAL ADVERTISING'},
+ {code:'VEND05540',name:'Sparkling Glass'},
+ {code:'VEND06720',name:'Stalwart People Services India Limited'},
+ {code:'VEND05569',name:'SUNIL SINGH'},
+ {code:'DKVEND10623',name:'SUNRISE ENTERPRISES'},
+ {code:'VEND05407',name:'SWITCHING AVO ELECTRO POWER LTD.'},
+ {code:'DKVEND2033',name:'Title Graphics Pvt Ltd'},
+ {code:'VEND05216',name:'TRISHNA ENTERPRISE'},
+ {code:'VEND05195',name:'Two-M Ophthotronics Pvt Ltd'},
+ {code:'VEND02166',name:'Velocity Events & Decor'},
+ {code:'VEND06640',name:'VIBS'},
+ {code:'VEND06639',name:'VR TELECOMS'},
+ {code:'VEND05986',name:'WE4U INDIA'},
+ {code:'VEND05358',name:'WINDCHILL'},
+ {code:'DKVEND10672',name:'WOOD VALLEY VENTURES'},
+ {code:'DKVEND10600',name:'ZEDEX GRAPHICS'},
+ {code:'DKVEND11178',name:'COMFORT ENTERPRISES(DL)'},
+ {code:'LKVEND3216',name:'Clever Wave Enterprises'},
+ {code:'LKVEND4917',name:'SULOCHANA ARTS'},
+ {code:'LKVEND3625',name:'KP Signage'},
+ {code:'FADV7364',name:'VENEXA INTERIOR'},
+ {code:'LKVEND3274',name:'Easy fix'},
+ {code:'SBDKVEND10011',name:'Microtek International Pvt. Ltd.'},
+ {code:'VEND-003801',name:'Numeric'},
+ {code:'LKVEND2849',name:'Shakssham'},
+ {code:'FADV7422',name:'AD N AD'},
+ {code:'FADV5932',name:'Joy Service Provider'},
+];
+
+// ════════ DEMO DATA ════════
+const DEMO=[
+ {caseNumber:'118139978',eta:'',vendor:'',remarks:'',vendorPortalAC:'',storeCode:'LKST637',region:'Singapore',me:'Singapore',storeName:'White Sands Singapore',status:'Assigned',ageing:'95',issue:'Fixture issues',detail:'Fixture Lock & Key Issue',state:'Singapore',city:'Singapore',tat:'>10',description:'Letter box keypad lock is spoiled. Please attend asap.',createdDate:'2026-05-15'},
+ {caseNumber:'119558837',eta:'',vendor:'',remarks:'',vendorPortalAC:'',storeCode:'LKST253',region:'East',me:'Chandan',storeName:'Diamond Plaza Mall Kolkata',status:'Assigned',ageing:'64',issue:'Civil Work',detail:'Tile Work',state:'West Bengal',city:'Kolkata',tat:'>10',description:'Multiple tiles broken and colour mismatch — need replacement.',createdDate:'2026-05-15'},
+ {caseNumber:'119917592',eta:'',vendor:'',remarks:'',vendorPortalAC:'',storeCode:'LKST4474',region:'East',me:'Ansari',storeName:'Khagaria Gandhi Nagar',status:'Awaiting Assignment',ageing:'57',issue:'Civil Work',detail:'Mirror Issue',state:'Bihar',city:'Khagaria',tat:'>10',description:'One side mirror wall is broken.',createdDate:'2026-05-15'},
+ {caseNumber:'120146823',eta:'',vendor:'',remarks:'',vendorPortalAC:'',storeCode:'LKST4703',region:'North',me:'Rohitas',storeName:'Balrampur Station Road',status:'Assigned',ageing:'53',issue:'Civil Work',detail:'Glass Door issue',state:'Uttar Pradesh',city:'Balrampur',tat:'>10',description:'Glass door not cleaning properly due to glass quality.',createdDate:'2026-05-15'},
+ {caseNumber:'121592025',eta:'',vendor:'',remarks:'',vendorPortalAC:'',storeCode:'LKST59',region:'North',me:'Ajay',storeName:'Connaught Place Delhi',status:'Assigned',ageing:'30',issue:'Civil Work',detail:'Tile Work',state:'Delhi',city:'New Delhi',tat:'>10',description:'Need to change the tile.',createdDate:'2026-05-15'},
+ {caseNumber:'121598842',eta:'',vendor:'',remarks:'',vendorPortalAC:'',storeCode:'LKST2306',region:'North',me:'Ajay',storeName:'Gurgaon Jharsa rd',status:'Assigned',ageing:'30',issue:'Civil Work',detail:'Mirror Issue',state:'Haryana',city:'Gurugram',tat:'>10',description:'Mirror change required.',createdDate:'2026-05-15'},
+ {caseNumber:'121224991',eta:'',vendor:'',remarks:'',vendorPortalAC:'',storeCode:'LKST261',region:'North',me:'Naveen',storeName:'Pachkula Store',status:'Awaiting Assignment',ageing:'37',issue:'Store Lighting',detail:'Ceiling Light Issue',state:'Haryana',city:'Panchkula',tat:'>10',description:'Need to change backroom ceiling light.',createdDate:'2026-05-15'},
+ {caseNumber:'120996431',eta:'',vendor:'',remarks:'',vendorPortalAC:'',storeCode:'LKST4184',region:'South',me:'Shareef',storeName:'Vidyanagar Kothagudem',status:'Awaiting Assignment',ageing:'41',issue:'AC',detail:'AC Not Working',state:'Telangana',city:'Kothagudem',tat:'>10',description:'Both ACs not working since 23-04-2026.',createdDate:'2026-05-15'},
+ {caseNumber:'121261249',eta:'',vendor:'',remarks:'',vendorPortalAC:'',storeCode:'LKST4415',region:'South',me:'Shareef',storeName:'Hyderabad Kodada',status:'Awaiting Assignment',ageing:'36',issue:'Civil Work',detail:'Glass Door issue',state:'Telangana',city:'Kodada',tat:'>10',description:'Glass door handle broken.',createdDate:'2026-05-15'},
+ {caseNumber:'121635779',eta:'',vendor:'',remarks:'',vendorPortalAC:'',storeCode:'LKST4148',region:'West',me:'Eknath',storeName:'Ahmednagar Pipeline Rd',status:'Awaiting Assignment',ageing:'29',issue:'Signage',detail:'Signage Light Issue',state:'Maharashtra',city:'Ahmednagar',tat:'>10',description:'Main signage board not lighting up.',createdDate:'2026-05-15'},
+ {caseNumber:'121304118',eta:'',vendor:'',remarks:'',vendorPortalAC:'',storeCode:'LKST908',region:'East',me:'Ansari',storeName:'Patna Ashok Rajpath',status:'Assigned',ageing:'35',issue:'UPS issue',detail:'UPS Less Backup',state:'Bihar',city:'Patna',tat:'>10',description:'Upgrade UPS battery — backup only 20-25 minutes.',createdDate:'2026-05-15'},
+ {caseNumber:'121313577',eta:'',vendor:'',remarks:'',vendorPortalAC:'',storeCode:'LKST1152',region:'East',me:'Chandan',storeName:'Kolkata Chakdaha',status:'Assigned',ageing:'35',issue:'UPS issue',detail:'UPS Less Backup',state:'West Bengal',city:'Nadia',tat:'>10',description:'UPS less backup.',createdDate:'2026-05-15'},
+ {caseNumber:'121460429',eta:'',vendor:'',remarks:'',vendorPortalAC:'',storeCode:'LKST4844',region:'North',me:'Chetan',storeName:'Rajsamand 100 Feet Road',status:'Awaiting Assignment',ageing:'32',issue:'Phoropter',detail:'Ming Sing Machine Issue',state:'Rajasthan',city:'Rajsamand',tat:'>10',description:'Phoropter not working — nothing displays.',createdDate:'2026-05-15'},
+ {caseNumber:'121519164',eta:'',vendor:'',remarks:'',vendorPortalAC:'',storeCode:'LKST4744',region:'East',me:'Chandan',storeName:'Guwahati Sarusajai',status:'Awaiting Assignment',ageing:'31',issue:'CCTV',detail:'CCTV not working',state:'Assam',city:'Guwahati',tat:'>10',description:'No cameras facing the 4 discussion tables.',createdDate:'2026-05-15'},
+ {caseNumber:'121683221',eta:'',vendor:'',remarks:'',vendorPortalAC:'',storeCode:'LKST2386',region:'South',me:'Shareef',storeName:'Tirupati Chittoor',status:'Awaiting Assignment',ageing:'28',issue:'AC',detail:'Water Cooler',state:'Andhra Pradesh',city:'Tirupati',tat:'>10',description:'Water dispenser cooling not happening.',createdDate:'2026-05-15'},
+ {caseNumber:'120300470',eta:'',vendor:'',remarks:'',vendorPortalAC:'',storeCode:'LKST2963',region:'Dubai',me:'Dubai',storeName:'Dubai Store',status:'Assigned',ageing:'50',issue:'Store Lighting',detail:'Ceiling Light Issue',state:'Dubai',city:'Dubai',tat:'>10',description:'Two ceiling lights are dead.',createdDate:'2026-05-15'},
+ {caseNumber:'121647668',eta:'',vendor:'',remarks:'',vendorPortalAC:'',storeCode:'LKST894',region:'North',me:'Naveen',storeName:'Chandigarh Sector 15-C',status:'Re-Open',ageing:'29',issue:'Electrical Work',detail:'Store Power Supply',state:'Punjab',city:'Chandigarh',tat:'>10',description:'Power supply issue, inverter battery not working.',createdDate:'2026-05-15'},
+ {caseNumber:'121683000',eta:'',vendor:'',remarks:'',vendorPortalAC:'',storeCode:'LKST2519',region:'Thailand',me:'Thailand',storeName:'Central Westgate Thailand',status:'Assigned',ageing:'27',issue:'Signage',detail:'Signage Broken',state:'Thailand',city:'Nonthaburi',tat:'>10',description:'Outer signage panel cracked.',createdDate:'2026-05-15'},
+];
+
+// ════════ STATE ════════
+let CU=null,allTix=[],openTix=[],closedTix=[],billingRows=[],billingHeaders=[];
+let openFil=[],closedFil=[],openPg=1,closedPg=1,billPg=1;const PG=15;
+let tabHistory=[],lastPivot=null,lastSummary=null;
+// active multi-select filters
+const F={reg:new Set(),me:new Set(),issue:new Set(),status:new Set(),creg:new Set(),cissue:new Set(),
+  areg:new Set(),avendor:new Set(),ame:new Set(),aissue:new Set(),wreg:new Set(),wme:new Set()};
+let asgPg=1;
+let adminEdit=new Set(); // case numbers admin has unlocked for editing
+let bulkSel=new Set();   // case numbers selected for bulk delete/status (assigned tab)
+let venPg=1,vmPg=1,venModalCase=null,apprCase=null,VENDORS_DYNAMIC=[];
+let wbrType='ac',wbrPg=1,wbrEdit=new Set(); // WBR sub-tab + edit-unlocked rows
+// ════════ LOGIN ════════
+function doLogin(){
+  const email=(document.getElementById('lemail').value||'').trim().toLowerCase();
+  const pass=(document.getElementById('lpass').value||'').trim();
+  if(!email||!pass){return showLErr('Please enter both email and password.');}
+  // Lenskart staff login (email + password)
+  let u=USERS.find(x=>x.email===email&&x.pass===pass);
+  // Vendor login (username = vendor code, password = vendor code) — case-insensitive
+  if(!u){
+    const raw=(document.getElementById('lemail').value||'').trim();
+    const v=VENDORS.concat(VENDORS_DYNAMIC).find(x=>x.code.toLowerCase()===email && pass.toLowerCase()===x.code.toLowerCase());
+    if(v) u={email:v.code,pass:v.code,name:v.name,first:v.name.split(' ')[0],role:'Vendor',region:'',rh:'',vendorCode:v.code,vendorName:v.name};
+  }
+  if(!u){return showLErr('Email or password is incorrect. Vendors: use your vendor code as both username and password.');}
+  CU=u;
+  document.getElementById('login').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  document.getElementById('unm').textContent=u.first;
+  document.getElementById('url').textContent=u.role+(u.region&&u.region!=='HO'?' · '+u.region:'');
+  document.getElementById('uav').textContent=u.first.substring(0,2).toUpperCase();
+  const isVendor=u.role==='Vendor';
+  const isAdmin=u.role==='Admin';
+  // Vendors see only their vendor tab; Lenskart staff see the normal tabs
+  ['nb-open','nb-closed','nb-summary','nb-analysis','nb-search','nb-assigned','nb-closures','nb-wbr'].forEach(id=>{
+    document.getElementById(id).classList.toggle('hidden',isVendor);
+  });
+  document.getElementById('nb-admin').classList.toggle('hidden',!isAdmin);
+  document.getElementById('nb-billing').classList.toggle('hidden',isVendor);
+  document.getElementById('nb-vendormgmt').classList.toggle('hidden',!isAdmin);
+  document.getElementById('nb-vendor').classList.toggle('hidden',!isVendor);
+  initPortal();
+  if(isVendor) showTab('vendor',true);
+}
+function showLErr(m){document.getElementById('lerrmsg').textContent=m;document.getElementById('lerr').classList.remove('hidden');}
+document.getElementById('lpass').addEventListener('keyup',e=>{if(e.key==='Enter')doLogin();});
+document.getElementById('lemail').addEventListener('keyup',e=>{if(e.key==='Enter')document.getElementById('lpass').focus();});
+function doLogout(){CU=null;document.getElementById('app').classList.add('hidden');document.getElementById('login').classList.remove('hidden');
+  document.getElementById('lemail').value='';document.getElementById('lpass').value='';document.getElementById('lerr').classList.add('hidden');}
+
+// Load registered vendors from the sheet on page load so newly-added vendors can log in
+function loadVendorsOnStart(){
+  if(!APPS_SCRIPT_URL||APPS_SCRIPT_URL.length<40)return;
+  const cbn='lk_gv_'+Date.now();
+  window[cbn]=function(d){
+    if(d&&d.vendors&&d.vendors.length){
+      // merge sheet vendors that aren't already in the static VENDORS list
+      d.vendors.forEach(v=>{
+        if(!VENDORS.some(x=>x.code.toLowerCase()===v.code.toLowerCase())
+          && !VENDORS_DYNAMIC.some(x=>x.code.toLowerCase()===v.code.toLowerCase())){
+          VENDORS_DYNAMIC.push({code:v.code,name:v.name});
+        }
+      });
+    }
+    const s=document.getElementById(cbn);if(s)s.remove();delete window[cbn];
+  };
+  const s=document.createElement('script');s.id=cbn;
+  s.src=APPS_SCRIPT_URL+'?action=getVendors&callback='+cbn;
+  document.body.appendChild(s);
+}
+loadVendorsOnStart();
+
+// ════════ INIT ════════
+function initPortal(){
+  allTix=[...DEMO];
+  splitTickets();
+  if(CU.role==='Vendor'){
+    // vendors only need their own view + live data
+    renderVendor();scheduleReset();
+    tabHistory=[];
+    setTimeout(refreshData,300);
+    return;
+  }
+  buildFilterDropdowns();
+  buildPivotFields();
+  renderConnBanner();
+  applyOpenFilter();renderOpen();renderClosed();buildSummary();renderAdminMEs();updateBadges();scheduleReset();
+  tabHistory=[];showTab('open',true);
+  // auto-pull live data from the sheet right after login
+  setTimeout(refreshData,400);
+}
+function splitTickets(){
+  // single sheet → split by status
+  openTix=allTix.filter(t=>isOpenStatus(t.status));
+  closedTix=allTix.filter(t=>isClosedStatus(t.status)).map(t=>t.closedAt?t:{...t,closedAt:t.closedAt||''});
+}
+function renderConnBanner(){
+  const live=APPS_SCRIPT_URL && APPS_SCRIPT_URL.length>40;
+  document.getElementById('conn-banner').innerHTML = live
+    ? `<div class="conn-banner conn-on"><span class="conn-dot"></span><div><b>Google Sheet connected.</b> Click "↻ Refresh from Sheet" to load live data. Currently showing demo data until first refresh.</div></div>`
+    : `<div class="conn-banner conn-off"><span class="conn-dot"></span><div><b>Not connected.</b> Paste your Apps Script URL in the file to load live data. Showing demo data.</div></div>`;
+}
+
+// ════════ TAB NAV + BACK ════════
+function showTab(t,noHistory){
+  const tabs=['open','closed','summary','analysis','search','assigned','closures','wbr','billing','vendormgmt','vendor','admin'];
+  const cur=tabs.find(n=>!document.getElementById('pg-'+n).classList.contains('hidden'));
+  if(!noHistory && cur && cur!==t) tabHistory.push(cur);
+  tabs.forEach(n=>{
+    document.getElementById('pg-'+n).classList.toggle('hidden',n!==t);
+    const b=document.getElementById('nb-'+n);if(b)b.classList.toggle('active',n===t);
+  });
+  const names={open:'Open Tickets',closed:'Closed Tickets',summary:'Summary',analysis:'Analysis',search:'Search',assigned:'Assigned Details',closures:'Closure Requests',wbr:'WBR Tickets',billing:'Billing',vendormgmt:'Vendors',vendor:'My Assigned Work',admin:'Admin'};
+  document.getElementById('crumb-now').textContent=names[t];
+  document.getElementById('backBtn').style.opacity=tabHistory.length?'1':'.45';
+  if(t==='closed')renderClosed();if(t==='summary')buildSummary();if(t==='assigned')renderAssigned();
+  if(t==='vendormgmt')renderVendorMgmt();if(t==='vendor')renderVendor();if(t==='closures')renderClosures();if(t==='wbr')renderWbr();
+  closeAllFdrops();
+}
+function goBack(){if(tabHistory.length){const prev=tabHistory.pop();showTab(prev,true);}}
+
+// ════════ ROLE FILTER BASE ════════
+function roleBase(arr){
+  if(CU.role==='ME')return arr.filter(t=>t.me===CU.first||t.me===CU.name);
+  if(CU.role==='RH')return arr.filter(t=>t.region===CU.region);
+  return [...arr];
+}
+
+// ════════ EXCEL-STYLE FILTER DROPDOWNS ════════
+function buildFilterDropdowns(){
+  const base=roleBase(openTix);
+  fillFdrop('reg',[...new Set(openTix.map(t=>t.region).filter(Boolean))].sort());
+  fillFdrop('me',[...new Set(openTix.map(t=>t.me).filter(Boolean))].sort());
+  fillFdrop('issue',[...new Set(openTix.map(t=>t.issue).filter(Boolean))].sort());
+  fillFdrop('status',[...new Set(openTix.map(t=>t.status).filter(Boolean))].sort());
+  fillFdrop('creg',[...new Set(closedTix.concat(openTix).map(t=>t.region).filter(Boolean))].sort());
+  fillFdrop('cissue',[...new Set(closedTix.concat(openTix).map(t=>t.issue).filter(Boolean))].sort());
+  // assigned-details filters (use all tickets)
+  fillFdrop('areg',[...new Set(allTix.map(t=>t.region).filter(Boolean))].sort());
+  fillFdrop('avendor',[...new Set(allTix.map(t=>t.vendor).filter(Boolean))].sort());
+  fillFdrop('ame',[...new Set(allTix.map(t=>t.me).filter(Boolean))].sort());
+  fillFdrop('aissue',[...new Set(allTix.map(t=>t.issue).filter(Boolean))].sort());
+}
+function fillFdrop(key,vals){
+  const p=document.getElementById('fp-'+key);if(!p)return;
+  p.innerHTML=`<input class="fdrop-search" placeholder="Search..." oninput="filterFdropList('${key}',this.value)">
+    <div class="fdrop-list" id="fl-${key}">${vals.map(v=>`<label class="fdrop-item"><input type="checkbox" value="${v.replace(/"/g,'&quot;')}" onchange="toggleFval('${key}',this.value,this.checked)" ${F[key].has(v)?'checked':''}>${v}</label>`).join('')}</div>
+    <div class="fdrop-foot"><button class="btn-sm" style="flex:1" onclick="selectAllF('${key}',true)">All</button><button class="btn-sm" style="flex:1" onclick="selectAllF('${key}',false)">None</button></div>`;
+}
+function filterFdropList(key,q){
+  q=q.toLowerCase();
+  document.querySelectorAll(`#fl-${key} .fdrop-item`).forEach(it=>{
+    it.style.display=it.textContent.toLowerCase().includes(q)?'':'none';
+  });
+}
+function toggleFdrop(key){
+  const panel=document.getElementById('fp-'+key);const wasOpen=panel.classList.contains('open');
+  closeAllFdrops();if(!wasOpen)panel.classList.add('open');
+}
+function closeAllFdrops(){document.querySelectorAll('.fdrop-panel').forEach(p=>p.classList.remove('open'));}
+document.addEventListener('click',e=>{if(!e.target.closest('.fdrop'))closeAllFdrops();});
+function toggleFval(key,val,on){if(on)F[key].add(val);else F[key].delete(val);markFbtn(key);
+  if(['reg','me','issue','status'].includes(key)){applyOpenFilter();renderOpen();}
+  else if(['areg','avendor','ame','aissue'].includes(key)){renderAssigned();}
+  else if(['wreg','wme'].includes(key)){renderWbr();}
+  else{renderClosed();}}
+function selectAllF(key,all){
+  const vals=[...document.querySelectorAll(`#fl-${key} .fdrop-item input`)];
+  F[key].clear();if(all)vals.forEach(v=>F[key].add(v.value));
+  vals.forEach(v=>v.checked=all);markFbtn(key);
+  if(['reg','me','issue','status'].includes(key)){applyOpenFilter();renderOpen();}
+  else if(['areg','avendor','ame','aissue'].includes(key)){renderAssigned();}
+  else if(['wreg','wme'].includes(key)){renderWbr();}
+  else{renderClosed();}
+}
+function markFbtn(key){
+  const map={reg:'fb-reg',me:'fb-me',issue:'fb-issue',status:'fb-status',creg:'fb-creg',cissue:'fb-cissue',
+    areg:'fb-areg',avendor:'fb-avendor',ame:'fb-ame',aissue:'fb-aissue',wreg:'fb-wreg',wme:'fb-wme'};
+  const labels={reg:'Region',me:'ME',issue:'Issue',status:'Status',creg:'Region',cissue:'Issue',
+    areg:'Region',avendor:'Vendor',ame:'ME',aissue:'Issue',wreg:'Region',wme:'ME'};
+  const btn=document.getElementById(map[key]);if(!btn)return;
+  const n=F[key].size;btn.classList.toggle('has-filter',n>0);
+  btn.textContent=(n>0?`${labels[key]} (${n})`:labels[key])+' ▾';
+}
+function clearAllFilters(){
+  ['reg','me','issue','status'].forEach(k=>{F[k].clear();markFbtn(k);});
+  document.getElementById('of-txt').value='';
+  buildFilterDropdowns();applyOpenFilter();renderOpen();
+}
+function clearAssignedFilters(){
+  ['areg','avendor','ame','aissue'].forEach(k=>{F[k].clear();markFbtn(k);});
+  document.getElementById('asg-txt').value='';
+  document.getElementById('asg-datemode').value='';
+  document.getElementById('asg-date').value='';
+  buildFilterDropdowns();renderAssigned();
+}
+// ════════ OPEN TABLE ════════
+function applyOpenFilter(){
+  const txt=(document.getElementById('of-txt').value||'').toLowerCase();
+  let base=roleBase(openTix);
+  openFil=base.filter(t=>{
+    const mt=!txt||(t.caseNumber+t.storeName+t.storeCode+t.me+t.issue).toLowerCase().includes(txt);
+    const mr=!F.reg.size||F.reg.has(t.region);
+    const mm=!F.me.size||F.me.has(t.me);
+    const mi=!F.issue.size||F.issue.has(t.issue);
+    const ms=!F.status.size||F.status.has(t.status);
+    return mt&&mr&&mm&&mi&&ms;
+  });
+  openPg=1;
+}
+function filterOpen(){applyOpenFilter();renderOpen();}
+
+function renderOpen(){
+  const total=openFil.length,s=(openPg-1)*PG,pg=openFil.slice(s,s+PG);
+  // ME and RH edit inline. Admin edits only rows they've unlocked via Edit button. HO = view only.
+  const roleCanEdit = CU.role==='ME'||CU.role==='RH';
+  const isAdmin = CU.role==='Admin';
+  document.getElementById('open-body').innerHTML = pg.length===0
+    ? `<tr><td colspan="13" style="text-align:center;padding:34px;color:var(--muted)">No tickets found</td></tr>`
+    : pg.map((t,i)=>{const ai=allTix.indexOf(t);
+      const ac=parseInt(t.ageing)>60?'age-crit':parseInt(t.ageing)>30?'age-high':'';
+      const unlocked = roleCanEdit || (isAdmin && adminEdit.has(t.caseNumber));
+      const editable = unlocked;
+      return `<tr>
+        <td class="mono">${t.caseNumber}</td>
+        <td><div style="font-weight:600;font-size:12.5px">${t.storeName}</div><div style="color:var(--muted2);font-size:11px">${t.storeCode}</div></td>
+        <td>${t.region}</td><td style="font-weight:500">${t.me}</td>
+        <td><div style="font-size:12px">${t.issue}</div><div style="color:var(--muted2);font-size:11px">${t.detail||''}</div></td>
+        <td><span class="${ac}" style="font-family:var(--mono);font-size:12px">${t.ageing}d</span></td>
+        <td><span class="tat-b ${t.tat==='>10'?'tat-high':'tat-ok'}">${t.tat}</span></td>
+        ${editable
+          ?`<td><input class="edit-inp" type="text" value="${t.eta||''}" placeholder="DD-MM-YYYY" maxlength="10" oninput="etaFormat(this);updTix(${ai},'eta',this.value)"></td>
+            <td>${vendorSelectHTML(ai,t.vendor||'')}</td>
+            <td><input class="edit-inp" value="${t.remarks||''}" placeholder="Remarks" oninput="updTix(${ai},'remarks',this.value)"></td>
+            <td><input class="edit-inp" value="${t.vendorPortalAC||''}" placeholder="AC #" oninput="updTix(${ai},'vendorPortalAC',this.value)"></td>`
+          :`<td>${t.eta||'—'}</td><td>${t.vendor||'—'}</td><td>${t.remarks||'—'}</td><td>${t.vendorPortalAC||'—'}</td>`}
+        <td>${editable
+          ? `<select class="edit-sel" onchange="updTix(${ai},'status',this.value)">${['Assigned','Awaiting Assignment','In Progress','Re-Open','Resolved','Closed'].map(o=>`<option ${t.status===o?'selected':''}>${o}</option>`).join('')}</select>`
+          : `<span class="badge ${statusClass(t.status)}">${t.status}</span>`}</td>
+        <td>${
+          roleCanEdit ? `<button class="save-btn" onclick="saveRow(${ai})">Save</button>`
+          : isAdmin ? (unlocked
+              ? `<button class="save-btn" onclick="saveRow(${ai});adminEdit.delete('${t.caseNumber}')">Save</button>`
+              : `<button class="btn-sm" style="padding:5px 12px;font-size:11px" onclick="adminEdit.add('${t.caseNumber}');renderOpen()">✏️ Edit</button>`)
+          : '<span style="color:var(--muted2);font-size:11px">View</span>'
+        }</td>
+      </tr>`;}).join('');
+
+  document.getElementById('open-stats').innerHTML=`
+    <div class="scard c-accent"><div class="sl">Open Tickets</div><div class="sv">${openFil.length}</div><div class="ss">Your visible tickets</div></div>
+    <div class="scard c-red"><div class="sl">Critical >60d</div><div class="sv">${openFil.filter(t=>parseInt(t.ageing)>60).length}</div><div class="ss">Severely overdue</div></div>
+    <div class="scard c-amber"><div class="sl">Awaiting Assign</div><div class="sv">${openFil.filter(t=>/awaiting/i.test(t.status)).length}</div><div class="ss">Needs action</div></div>
+    <div class="scard c-blue"><div class="sl">Assigned</div><div class="sv">${openFil.filter(t=>/^assigned/i.test(t.status)).length}</div><div class="ss">In progress</div></div>`;
+  document.getElementById('open-ttl').textContent=CU.role==='ME'?`My Tickets — ${CU.first}`:CU.role==='RH'?`Region Tickets — ${CU.region}`:'All Open Tickets';
+  document.getElementById('open-sub').textContent=`${total} ticket${total!==1?'s':''} · Synced ${new Date().toLocaleTimeString()}`;
+  renderPgn('open',total,openPg);
+}
+function statusClass(s){s=(s||'').toLowerCase();return /^assigned/.test(s)?'b-assigned':/awaiting/.test(s)?'b-awaiting':/re-?open/.test(s)?'b-reopen':/resolved|closed/.test(s)?'b-closed':'b-progress';}
+
+// ETA auto-format → DD-MM-YYYY with auto hyphen
+function etaFormat(el){
+  let v=el.value.replace(/[^0-9]/g,'');
+  if(v.length>8)v=v.slice(0,8);
+  let out=v;
+  if(v.length>=5)out=v.slice(0,2)+'-'+v.slice(2,4)+'-'+v.slice(4);
+  else if(v.length>=3)out=v.slice(0,2)+'-'+v.slice(2);
+  el.value=out;
+}
+function updTix(idx,f,v){if(allTix[idx])allTix[idx][f]=v;}
+
+function saveRow(idx){
+  const t=allTix[idx];
+  const vendorRaw=(t.vendor||'').trim();
+  const selfRes = /^self/i.test(vendorRaw) || vendorRaw.toLowerCase()==='self resolution';
+  const inBank = vendorRaw!=='' && allVendors().some(v=>v.name===vendorRaw||v.code.toLowerCase()===vendorRaw.toLowerCase());
+  // RULE 1: if a vendor name is entered, it MUST be a registered vendor (or Self Resolution)
+  if(vendorRaw!=='' && !selfRes && !inBank){
+    showToast('⚠️ "'+vendorRaw+'" is not a registered vendor. Pick a vendor from the list or add it in the Vendors tab.','err');
+    return;
+  }
+  const vendorOk = inBank || selfRes;
+  // RULE 2: a ticket can be "Assigned" only if a valid vendor is chosen OR self-resolution.
+  if(/^assigned$/i.test(t.status) && !vendorOk){
+    t.status='Awaiting Assignment';
+    showToast('⚠️ Choose a vendor from the list (or Self Resolution) to assign. Kept as Awaiting Assignment.','err');
+    splitTickets();applyOpenFilter();renderOpen();updateBadges();
+    return;
+  }
+  if(isClosedStatus(t.status)){
+    t.closedAt=new Date().toLocaleString('en-IN',{hour:'2-digit',minute:'2-digit'});
+    splitTickets();
+    showToast(`✅ Ticket ${t.caseNumber} marked ${t.status} — moved to Closed`,'ok');
+    buildFilterDropdowns();applyOpenFilter();renderClosed();buildSummary();
+  } else {
+    splitTickets();
+    showToast(`💾 Ticket ${t.caseNumber} saved`,'ok');
+  }
+  pushToSheet(t);
+  updateBadges();renderOpen();
+}
+function pushToSheet(t){
+  if(!APPS_SCRIPT_URL||APPS_SCRIPT_URL.length<40)return;
+  const cbName='lk_save_'+Date.now();
+  const params=new URLSearchParams({
+    action:'saveRow',callback:cbName,
+    caseNumber:t.caseNumber, eta:t.eta||'', vendor:t.vendor||'',
+    remarks:t.remarks||'', vendorAC:t.vendorPortalAC||'', status:t.status||'', closedBy:(CU&&CU.name)||''
+  });
+  const timeout=setTimeout(()=>{cleanup();},15000);
+  function cleanup(){delete window[cbName];const s=document.getElementById(cbName);if(s)s.remove();}
+  window[cbName]=function(d){
+    clearTimeout(timeout);cleanup();
+    if(d&&(d.status==='saved'||d.status==='closed')) showToast('✅ Saved to Google Sheet','ok');
+    else showToast('Saved locally, but sheet did not confirm. Check deployment.','err');
+  };
+  const s=document.createElement('script');
+  s.id=cbName;
+  s.src=APPS_SCRIPT_URL+'?'+params.toString();
+  s.onerror=()=>{clearTimeout(timeout);cleanup();showToast('Could not save to sheet. Re-deploy script as NEW VERSION.','err');};
+  document.body.appendChild(s);
+}
+
+// ════════ CLOSED TABLE ════════
+function filterClosed(){renderClosed();}
+function clearClosedDate(){
+  document.getElementById('cf-grain').value='';
+  document.getElementById('cf-date').value='';
+  renderClosed();
+}
+function renderClosed(){
+  const txt=(document.getElementById('cf-txt')?.value||'').toLowerCase();
+  const grain=document.getElementById('cf-grain')?.value||'';
+  const dateVal=document.getElementById('cf-date')?.value||'';
+  // ALL closed tickets (no 8 AM reset), filtered by role: ME=own, RH=region, Admin/HO=all
+  let base=roleBase(closedTix);
+  closedFil=base.filter(t=>{
+    const mt=!txt||(t.caseNumber+t.storeName+t.me+t.issue+(t.vendor||'')).toLowerCase().includes(txt);
+    const mr=!F.creg.size||F.creg.has(t.region);
+    const mi=!F.cissue.size||F.cissue.has(t.issue);
+    let md=true;
+    if(grain&&dateVal){
+      const d=parseDate(t.closedAt);
+      if(!d)md=false;
+      else{
+        const sel=parseDate(dateVal);
+        if(grain==='day')md=dayKey(d)===dayKey(sel);
+        else if(grain==='week')md=weekKey(d)===weekKey(sel);
+        else if(grain==='month')md=monthKey(d)===monthKey(sel);
+      }
+    }
+    return mt&&mr&&mi&&md;
+  });
+  const total=closedFil.length,s=(closedPg-1)*PG,pg=closedFil.slice(s,s+PG);
+  document.getElementById('closed-body').innerHTML=total===0
+    ?`<tr><td colspan="12" style="text-align:center;padding:40px;color:var(--muted)">No closed tickets${grain&&dateVal?' for the selected date':''} found.</td></tr>`
+    :pg.map(t=>`<tr><td class="mono">${t.caseNumber}</td>
+      <td><div style="font-weight:600;font-size:12.5px">${t.storeName}</div><div style="color:var(--muted2);font-size:11px">${t.storeCode}</div></td>
+      <td>${t.region}</td><td>${t.me}</td><td>${t.issue}</td><td>${t.eta||'—'}</td><td>${t.vendor||'—'}</td><td>${t.remarks||'—'}</td>
+      <td style="font-family:var(--mono);font-weight:600">${t.amount?'₹'+t.amount:'—'}</td>
+      <td>${docLinks(t)}</td>
+      <td><span style="font-family:var(--mono);font-size:12px">${t.ageing}d</span></td>
+      <td style="color:var(--muted);font-size:11px">${t.closedAt||'—'}</td></tr>`).join('');
+  const scope=CU.role==='ME'?`My closed — ${CU.first}`:CU.role==='RH'?`Region closed — ${CU.region}`:'All closed (Pan India)';
+  document.getElementById('closed-ttl').textContent=scope;
+  document.getElementById('closed-stats').innerHTML=`
+    <div class="scard c-green"><div class="sl">Closed Tickets</div><div class="sv">${total}</div><div class="ss">${grain&&dateVal?'Selected period':'All time'}</div></div>
+    <div class="scard c-purple"><div class="sl">Regions</div><div class="sv">${[...new Set(closedFil.map(t=>t.region))].length}</div><div class="ss">With closures</div></div>
+    <div class="scard c-blue"><div class="sl">Vendors</div><div class="sv">${[...new Set(closedFil.map(t=>t.vendor).filter(Boolean))].length}</div><div class="ss">Involved</div></div>
+    <div class="scard c-accent"><div class="sl">Total Amount</div><div class="sv" style="font-size:20px">₹${closedFil.reduce((s,t)=>s+(parseFloat(t.amount)||0),0).toLocaleString('en-IN')}</div><div class="ss">Sum of shown</div></div>`;
+  renderPgn('closed',total,closedPg);
+}
+// ════════ ASSIGNED DETAILS (clean read-only + date filter) ════════
+let asgFil=[];
+function assignedFilteredData(){
+  const txt=(document.getElementById('asg-txt')?.value||'').toLowerCase();
+  const dateMode=document.getElementById('asg-datemode')?.value||'';
+  const grain=document.getElementById('asg-grain')?.value||'day';
+  const dateVal=document.getElementById('asg-date')?.value||''; // yyyy-mm-dd
+  let base=roleBase(allTix);
+  return base.filter(t=>{
+    const mt=!txt||(t.caseNumber+t.storeName+t.me+t.issue+(t.vendor||'')+(t.remarks||'')).toLowerCase().includes(txt);
+    const mr=!F.areg.size||F.areg.has(t.region);
+    const mv=!F.avendor.size||F.avendor.has(t.vendor);
+    const mm=!F.ame.size||F.ame.has(t.me);
+    const mi=!F.aissue.size||F.aissue.has(t.issue);
+    let md=true;
+    if(dateMode&&dateVal){
+      const src=dateMode==='created'?t.createdDate:t.closedAt;
+      const d=parseDate(src);
+      if(!d)md=false;
+      else{
+        const sel=parseDate(dateVal);
+        if(grain==='day')md=dayKey(d)===dayKey(sel);
+        else if(grain==='week')md=weekKey(d)===weekKey(sel);
+        else if(grain==='month')md=monthKey(d)===monthKey(sel);
+      }
+    }
+    return mt&&mr&&mv&&mm&&mi&&md;
+  });
+}
+function renderAssigned(){
+  asgFil=assignedFilteredData();
+  const total=asgFil.length,s=(asgPg-1)*PG,pg=asgFil.slice(s,s+PG);
+  const isAdmin=CU.role==='Admin';
+  const canApprove=CU.role==='ME'||CU.role==='RH';
+  // show checkbox column only for admin
+  document.getElementById('asg-chk-th').style.display=isAdmin?'':'none';
+  document.getElementById('asg-body').innerHTML=total===0
+    ?`<tr><td colspan="14" style="text-align:center;padding:38px;color:var(--muted)">No tickets match these filters</td></tr>`
+    :pg.map(t=>{
+      const req=t.closureRequest==='Pending';
+      return `<tr>
+      ${isAdmin?`<td><input type="checkbox" class="rowchk" ${bulkSel.has(t.caseNumber)?'checked':''} onchange="toggleBulk('${t.caseNumber}',this.checked)"></td>`:''}
+      <td class="mono">${t.caseNumber}</td>
+      <td><div style="font-weight:600;font-size:12.5px">${t.storeName}</div><div style="color:var(--muted2);font-size:11px">${t.storeCode}</div></td>
+      <td>${t.region}</td><td>${t.me}</td><td>${t.issue}</td>
+      <td style="font-size:11px">${t.createdDate?dayKey(parseDate(t.createdDate)||new Date()):'—'}</td>
+      <td>${t.eta||'—'}</td><td>${t.vendor||'—'}</td><td>${t.vendorPortalAC||'—'}</td><td>${t.remarks||'—'}</td>
+      <td><span class="badge ${statusClass(t.status)}">${t.status}</span>
+        ${req?`<br>${canApprove?`<button class="btn-sm" style="padding:3px 9px;font-size:10px;margin-top:4px" onclick="openApprModal('${t.caseNumber}')">⚠️ Review Closure</button>`:'<span class="req-badge">Closure requested</span>'}`:''}
+        ${(t.jobSheet||t.beforeSnap||t.afterSnap)?`<br><span style="font-size:10px;color:var(--muted)">📎 ${[t.jobSheet&&'Job',t.beforeSnap&&'Before',t.afterSnap&&'After'].filter(Boolean).join(', ')}</span>`:''}
+      </td>
+      <td style="font-size:11px;color:var(--muted)">${t.closedAt||'—'}</td>
+    </tr>`;}).join('');
+  const dateMode=document.getElementById('asg-datemode')?.value||'';
+  const withEta=asgFil.filter(t=>t.eta).length;
+  const pendClosure=asgFil.filter(t=>t.closureRequest==='Pending').length;
+  const closedN=asgFil.filter(t=>isClosedStatus(t.status)).length;
+  document.getElementById('asg-stats').innerHTML=`
+    <div class="scard c-accent"><div class="sl">Matching Tickets</div><div class="sv">${total}</div><div class="ss">${dateMode?'In selected period':'All tickets'}</div></div>
+    <div class="scard c-blue"><div class="sl">With ETA Filled</div><div class="sv">${withEta}</div><div class="ss">ETA provided</div></div>
+    <div class="scard c-amber"><div class="sl">Closure Pending</div><div class="sv">${pendClosure}</div><div class="ss">Vendor requested</div></div>
+    <div class="scard c-green"><div class="sl">Closed</div><div class="sv">${closedN}</div><div class="ss">Resolved/Closed</div></div>`;
+  renderPgn('asg',total,asgPg);
+  updateBulkBar();
+}
+// ════════ SUMMARY ════════
+function buildSummary(){
+  const allO=roleBase(openTix),allC=roleBase(closedTix);
+  document.getElementById('sum-top').innerHTML=`
+    <div class="scard c-accent"><div class="sl">Total Open</div><div class="sv">${allO.length}</div><div class="ss">Open tickets</div></div>
+    <div class="scard c-green"><div class="sl">Closed Total</div><div class="sv">${allC.length}</div><div class="ss">All closed tickets</div></div>
+    <div class="scard c-red"><div class="sl">Critical >60d</div><div class="sv">${allO.filter(t=>parseInt(t.ageing)>60).length}</div><div class="ss">Urgent</div></div>
+    <div class="scard c-purple"><div class="sl">Regions Active</div><div class="sv">${[...new Set(allO.map(t=>t.region))].length}</div><div class="ss">With open tickets</div></div>`;
+  const regs=[...new Set([...allO,...allC].map(t=>t.region))].sort();
+  const mxR=Math.max(...regs.map(r=>allO.filter(t=>t.region===r).length),1);
+  document.getElementById('s-region').innerHTML=sumBlock('By Region','Open | Closed',regs,r=>allO.filter(t=>t.region===r).length,r=>allC.filter(t=>t.region===r).length,mxR);
+  const mes=[...new Set(allO.map(t=>t.me))].sort();
+  const mxM=Math.max(...mes.map(m=>allO.filter(t=>t.me===m).length),1);
+  document.getElementById('s-me').innerHTML=sumBlock('By ME','Open | Closed',mes.slice(0,18),m=>allO.filter(t=>t.me===m).length,m=>allC.filter(t=>t.me===m).length,mxM);
+  const iss=[...new Set(allO.map(t=>t.issue).filter(Boolean))].sort();
+  const mxI=Math.max(...iss.map(i=>allO.filter(t=>t.issue===i).length),1);
+  document.getElementById('s-issue').innerHTML=sumBlock('By Issue / Vendor','Open | Closed',iss.slice(0,15),i=>allO.filter(t=>t.issue===i).length,i=>allC.filter(t=>t.issue===i).length,mxI);
+  const ag=[{l:'Critical — >60 days',f:t=>parseInt(t.ageing)>60,c:'a-crit'},{l:'High — 31 to 60 days',f:t=>parseInt(t.ageing)>30&&parseInt(t.ageing)<=60,c:'a-high'},
+    {l:'Moderate — 11 to 30 days',f:t=>parseInt(t.ageing)>10&&parseInt(t.ageing)<=30,c:'a-med'},{l:'Fresh — up to 10 days',f:t=>parseInt(t.ageing)<=10,c:'a-ok'}];
+  document.getElementById('s-age').innerHTML=`<div class="sum-head"><span>Ageing Breakdown</span><span class="h2">Open only</span></div>`+
+    ag.map(g=>{const arr=allO.filter(g.f);const br=regs.map(r=>({r,n:arr.filter(t=>t.region===r).length})).filter(x=>x.n>0);
+      return `<div class="age-row"><div style="flex:1;font-size:12.5px;font-weight:500">${g.l}</div><span class="apill ${g.c}">${arr.length}</span><span style="font-size:11px;color:var(--muted2)">${br.map(x=>x.r+': '+x.n).join(' · ')}</span></div>`;}).join('');
+  lastSummary={regs,allO,allC,mes,iss,ag};
+}
+function sumBlock(title,hint,keys,getO,getC,mx){
+  return `<div class="sum-head"><span>${title}</span><span class="h2">${hint}</span></div>`+
+    keys.map(k=>{const o=getO(k),c=getC(k);return `<div class="srow"><div class="sr-nm" style="font-size:12px">${k}</div>
+      <div class="sr-bar"><div class="btr"><div class="bfo" style="width:${Math.round(o/mx*100)}%"></div></div></div>
+      <div class="sr-n"><span class="no">${o}</span><span class="nc">${c}</span></div></div>`;}).join('');
+}
+
+// ════════ ANALYSIS / PIVOT ════════
+const PIVOT_DIMS=[['region','Region'],['me','ME'],['issue','Issue'],['status','Status'],['vendor','Vendor'],['state','State'],['city','City'],['tat','TAT'],['rh','RH'],
+  ['createdDay','Created Day'],['createdWeek','Created Week'],['createdMonth','Created Month'],
+  ['closedDay','Closed Day'],['closedWeek','Closed Week'],['closedMonth','Closed Month']];
+function buildPivotFields(){
+  const rowSel=document.getElementById('pv-row'),colSel=document.getElementById('pv-col');
+  rowSel.innerHTML=PIVOT_DIMS.map(([v,l])=>`<option value="${v}">${l}</option>`).join('');
+  colSel.innerHTML='<option value="">— None —</option>'+PIVOT_DIMS.map(([v,l])=>`<option value="${v}">${l}</option>`).join('');
+}
+function pivotData(){
+  const src=document.getElementById('pv-src').value;
+  let data=src==='open'?roleBase(openTix):src==='closed'?roleBase(closedTix):roleBase(allTix);
+  return data.map(t=>{
+    const cd=parseDate(t.createdDate), xd=parseDate(t.closedAt);
+    return {...t,
+      rh:(USERS.find(u=>u.first===t.me)||{}).rh||'',
+      createdDay:cd?dayKey(cd):'(no date)', createdWeek:cd?weekKey(cd):'(no date)', createdMonth:cd?monthKey(cd):'(no date)',
+      closedDay:xd?dayKey(xd):'(open)', closedWeek:xd?weekKey(xd):'(open)', closedMonth:xd?monthKey(xd):'(open)'
+    };
+  });
+}
+function buildPivot(){
+  const rowF=document.getElementById('pv-row').value,colF=document.getElementById('pv-col').value,valF=document.getElementById('pv-val').value;
+  const data=pivotData();
+  const rows=[...new Set(data.map(t=>t[rowF]||'(blank)'))].sort();
+  const cols=colF?[...new Set(data.map(t=>t[colF]||'(blank)'))].sort():[''];
+  function agg(items){
+    if(valF==='count')return items.length;
+    const ages=items.map(t=>parseInt(t.ageing)||0);
+    if(!ages.length)return 0;
+    if(valF==='ageing_avg')return Math.round(ages.reduce((a,b)=>a+b,0)/ages.length);
+    if(valF==='ageing_max')return Math.max(...ages);
+  }
+  const matrix=rows.map(r=>cols.map(c=>{
+    const items=data.filter(t=>(t[rowF]||'(blank)')===r&&(!colF||(t[colF]||'(blank)')===c));
+    return agg(items);
+  }));
+  const colTotals=cols.map((c,ci)=>matrix.reduce((s,row)=>s+row[ci],0));
+  const grand=colTotals.reduce((a,b)=>a+b,0);
+  const maxVal=Math.max(...matrix.flat(),1);
+  const rowLabel=PIVOT_DIMS.find(d=>d[0]===rowF)[1];
+  let html=`<table class="pivot-table"><thead><tr><th>${rowLabel}</th>${cols.map(c=>`<th class="num">${c||valLabel(valF)}</th>`).join('')}${colF?'<th class="num">Total</th>':''}</tr></thead><tbody>`;
+  rows.forEach((r,ri)=>{
+    const rowTotal=matrix[ri].reduce((a,b)=>a+b,0);
+    html+=`<tr><td style="font-weight:600">${r}</td>${matrix[ri].map(v=>`<td class="num"><span class="heat" style="background:${heatColor(v,maxVal)}">${v}</span></td>`).join('')}${colF?`<td class="num" style="font-weight:700">${rowTotal}</td>`:''}</tr>`;
+  });
+  if(colF)html+=`<tr class="grand"><td>Grand Total</td>${colTotals.map(v=>`<td class="num">${v}</td>`).join('')}<td class="num">${grand}</td></tr>`;
+  else html+=`<tr class="grand"><td>Grand Total</td><td class="num">${grand}</td></tr>`;
+  html+=`</tbody></table>`;
+  document.getElementById('pivot-out').innerHTML=html;
+  lastPivot={rowLabel,cols,rows,matrix,colTotals,grand,colF,valF,valLabel:valLabel(valF)};
+}
+function valLabel(v){return v==='count'?'Count':v==='ageing_avg'?'Avg Age':'Max Age';}
+function heatColor(v,mx){if(v===0)return'transparent';const p=v/mx;
+  if(p>.66)return'rgba(220,38,38,.18)';if(p>.33)return'rgba(217,119,6,.18)';return'rgba(10,157,99,.15)';}
+
+// ════════ SEARCH ════════
+function doSearch(){
+  const q=(document.getElementById('srch-inp').value||'').trim();if(!q)return;
+  const found=allTix.find(t=>t.caseNumber===q);
+  const div=document.getElementById('srch-result');
+  if(!found){div.innerHTML=`<div class="no-res"><div class="ic">🔍</div><div style="font-size:15px;font-weight:600;margin-bottom:6px">No ticket found</div><div>Case <b>${q}</b> not found in the sheet</div></div>`;return;}
+  const isOpen=isOpenStatus(found.status);
+  div.innerHTML=`<div class="rcard"><div class="rc-hd">
+    <div><div class="rc-num">${found.caseNumber}</div><div class="rc-st">${found.storeName} · ${found.storeCode}</div></div>
+    <div class="rc-bdg"><span class="${isOpen?'src-o':'src-c'}">${isOpen?'🟢 Open':'✅ Closed'}</span><span class="badge ${statusClass(found.status)}">${found.status}</span></div></div>
+    <div class="rc-grid">${[['Region',found.region],['ME',found.me],['Issue',found.issue],['Detail',found.detail||'—'],['Store Code',found.storeCode],['City',`${found.city||''}, ${found.state||''}`],['Ageing',found.ageing+' days'],['TAT',found.tat],['ETA',found.eta||'Not set'],['Vendor',found.vendor||'Not assigned'],['Vendor AC #',found.vendorPortalAC||'—'],['Remarks',found.remarks||'—']].map(([l,v])=>`<div class="rc-f"><div class="rc-fl">${l}</div><div class="rc-fv">${v}</div></div>`).join('')}</div>
+    <div class="rc-desc"><b style="color:var(--muted2);font-size:10px;text-transform:uppercase;letter-spacing:.5px">Description</b><br><br>${found.description||'No description.'}</div></div>`;
+}
+document.addEventListener('keyup',e=>{if(e.key==='Enter'&&document.getElementById('srch-inp')===document.activeElement)doSearch();});
+function quickSearch(v){if(v&&v.length>=6){document.getElementById('srch-inp').value=v;showTab('search');doSearch();}}
+// ════════ BILLING ════════
+function handleBillingUpload(inp){
+  if(!inp.files||!inp.files[0])return;
+  const file=inp.files[0],reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+      if(!rows.length){showToast('File is empty','err');return;}
+      billingHeaders=rows[0].map(h=>String(h));
+      billingRows=rows.slice(1).filter(r=>r.some(c=>c!=='')).map(r=>{const o={};billingHeaders.forEach((h,i)=>o[h]=r[i]!==undefined?r[i]:'');return o;});
+      document.getElementById('bill-table-wrap').style.display='';
+      billPg=1;renderBilling();
+      showToast(`🧾 ${billingRows.length} billing rows loaded — saving to "billings" sheet`,'ok');
+      pushBillingToSheet();
+    }catch(err){showToast('Could not read file: '+err.message,'err');}
+  };
+  reader.readAsArrayBuffer(file);
+}
+function pushBillingToSheet(){
+  if(!APPS_SCRIPT_URL||APPS_SCRIPT_URL.length<40)return;
+  fetch(APPS_SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'uploadBilling',headers:billingHeaders,rows:billingRows})})
+    .then(()=>showToast('✅ Billing saved to "billings" sheet','ok')).catch(()=>showToast('Billing save attempted — verify in sheet','err'));
+}
+function renderBilling(){
+  const txt=(document.getElementById('bill-txt')?.value||'').toLowerCase();
+  const fil=billingRows.filter(r=>!txt||Object.values(r).join(' ').toLowerCase().includes(txt));
+  const total=fil.length,s=(billPg-1)*PG,pg=fil.slice(s,s+PG);
+  document.getElementById('bill-head').innerHTML='<tr>'+billingHeaders.map(h=>`<th>${h}</th>`).join('')+'</tr>';
+  document.getElementById('bill-body').innerHTML=total===0
+    ?`<tr><td colspan="${billingHeaders.length||1}" style="text-align:center;padding:30px;color:var(--muted)">No billing rows</td></tr>`
+    :pg.map(r=>'<tr>'+billingHeaders.map(h=>`<td>${r[h]??''}</td>`).join('')+'</tr>').join('');
+  renderPgn('bill',total,billPg);
+}
+
+// ════════ TICKET UPLOAD (admin) ════════
+function handleTicketUpload(inp){
+  if(!inp.files||!inp.files[0])return;
+  const file=inp.files[0],reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const rows=XLSX.utils.sheet_to_json(ws,{defval:''});
+      if(!rows.length){showToast('File empty','err');return;}
+      const mapped=rows.map(r=>({
+        caseNumber:String(r['Case Number']||r['Case']||r['caseNumber']||''),
+        eta:r['ETA']||'',vendor:r['Vendor']||'',remarks:r['Remarks']||'',vendorPortalAC:r['Vendor Portal AC Tickets']||'',
+        storeCode:r['Store Code']||'',region:r['Region']||'',me:r['ME']||r['ME Name']||'',
+        storeName:r['Store Name']||'',status:r['Status']||'Assigned',ageing:String(r['Ageing']||'0'),
+        issue:r['Issue']||'',detail:r['Detail']||'',state:r['Store_State']||r['State']||'',city:r['Store_City']||r['City']||'',
+        tat:r['TAT']||'',description:r['Description']||'',closedAt:r['Closed At']||'',
+        createdDate:r['Case Creation Time']||r['Date']||'',rh:(USERS.find(u=>u.first===(r['ME']||r['ME Name']||''))||{}).rh||''
+      })).filter(t=>t.caseNumber);
+      allTix=mapped;splitTickets();buildFilterDropdowns();buildPivotFields();applyOpenFilter();renderOpen();renderClosed();buildSummary();updateBadges();
+      showToast(`📤 ${mapped.length} tickets loaded & split by status`,'ok');
+      pushTicketsToSheet(mapped);
+    }catch(err){showToast('Could not read file: '+err.message,'err');}
+  };
+  reader.readAsArrayBuffer(file);
+}
+function pushTicketsToSheet(tix){
+  if(!APPS_SCRIPT_URL||APPS_SCRIPT_URL.length<40)return;
+  fetch(APPS_SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'uploadTickets',tickets:tix})})
+    .then(()=>showToast('✅ Tickets saved to Google Sheet','ok')).catch(()=>showToast('Upload attempted — verify in sheet','err'));
+}
+
+// ════════ REFRESH FROM SHEET ════════
+function refreshData(){
+  if(!APPS_SCRIPT_URL||APPS_SCRIPT_URL.length<40){showToast('Add Apps Script URL to enable live data','err');return;}
+  const btn=document.getElementById('refreshBtn');btn.innerHTML='<span class="loader"></span> Loading...';
+  // JSONP technique — bypasses CORS completely (browser never blocks a <script> tag)
+  const cbName='lk_cb_'+Date.now();
+  const timeout=setTimeout(()=>{
+    cleanup();btn.innerHTML='↻ Refresh from Sheet';
+    showToast('Timed out reaching the sheet. Check deployment access = Anyone.','err');
+  },20000);
+  function cleanup(){ delete window[cbName]; const s=document.getElementById(cbName); if(s)s.remove(); }
+  window[cbName]=function(d){
+    clearTimeout(timeout);cleanup();
+    if(d&&d.tickets&&d.tickets.length){
+      allTix=d.tickets.map(normalizeTicket);
+      splitTickets();updateBadges();
+      try{
+        if(CU&&CU.role==='Vendor'){
+          renderVendor();
+        }else{
+          buildFilterDropdowns();buildPivotFields();applyOpenFilter();renderOpen();renderClosed();buildSummary();
+          renderAssigned();renderVendorMgmt();
+        }
+      }catch(err){ console.error('render error',err); }
+      showToast(`↻ Loaded ${allTix.length} tickets from Google Sheet`,'ok');
+    }else{showToast('Connected ✓ but the Tickets sheet is empty. Upload tickets first.','err');}
+    btn.innerHTML='↻ Refresh from Sheet';
+  };
+  const s=document.createElement('script');
+  s.id=cbName;
+  s.src=APPS_SCRIPT_URL+'?action=getAll&callback='+cbName;
+  s.onerror=()=>{clearTimeout(timeout);cleanup();btn.innerHTML='↻ Refresh from Sheet';
+    showToast('Could not load script. Re-deploy as NEW VERSION, access = Anyone.','err');};
+  document.body.appendChild(s);
+}
+// read a value trying several header spellings (handles trailing spaces, case)
+function gv(r, ...keys){
+  for(const k of keys){
+    if(r[k]!==undefined && r[k]!=='') return r[k];
+  }
+  // fallback: trimmed/case-insensitive match against all keys
+  const want=keys.map(k=>k.toLowerCase().trim());
+  for(const actual in r){
+    if(want.includes(actual.toLowerCase().trim()) && r[actual]!=='' && r[actual]!==undefined) return r[actual];
+  }
+  return '';
+}
+function normalizeTicket(r){
+  return {caseNumber:String(gv(r,'Case Number','Case')||''),eta:gv(r,'ETA'),vendor:gv(r,'Vendor'),remarks:gv(r,'Remarks'),
+    vendorPortalAC:gv(r,'Vendor Portal AC Tickets'),storeCode:gv(r,'Store Code'),region:gv(r,'Region'),
+    me:gv(r,'ME','ME Name'),storeName:gv(r,'Store Name'),status:gv(r,'Status')||'Assigned',ageing:String(gv(r,'Ageing')||'0'),
+    issue:gv(r,'Issue'),detail:gv(r,'Detail'),state:gv(r,'Store_State','State'),city:gv(r,'Store_City','City'),
+    tat:gv(r,'TAT'),description:gv(r,'Description'),closedAt:gv(r,'Closed At'),
+    storePhone:gv(r,'Store Phone Number','Store Phone number','Store Phone'),
+    vendorETA:gv(r,'Vendor ETA'),jobSheet:gv(r,'Job Sheet'),beforeSnap:gv(r,'Before Snap'),afterSnap:gv(r,'After Snap'),
+    closureRequest:gv(r,'Closure Request'),amount:gv(r,'Vendor Amount','Amount'),pendingStatus:gv(r,'Pending Status'),firstVisitDate:gv(r,'First Visit Date'),
+    createdDate:gv(r,'Case Creation Time','Date'),rh:(USERS.find(u=>u.first===gv(r,'ME','ME Name'))||{}).rh||''};
+}
+// parse various date strings → JS Date (handles DD-MM-YYYY, YYYY-MM-DD, ISO)
+function parseDate(s){
+  if(!s)return null;
+  s=String(s).trim();
+  let m=s.match(/^(\d{4})-(\d{2})-(\d{2})/); if(m)return new Date(+m[1],+m[2]-1,+m[3]);
+  m=s.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})/); if(m)return new Date(+m[3],+m[2]-1,+m[1]);
+  const d=new Date(s); return isNaN(d)?null:d;
+}
+function weekKey(d){const dt=new Date(d);const onejan=new Date(dt.getFullYear(),0,1);const wk=Math.ceil((((dt-onejan)/86400000)+onejan.getDay()+1)/7);return dt.getFullYear()+'-W'+String(wk).padStart(2,'0');}
+function monthKey(d){const dt=new Date(d);return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0');}
+function dayKey(d){const dt=new Date(d);return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');}
+
+// ════════ BADGES ════════
+function updateBadges(){
+  document.getElementById('nb-o').textContent=roleBase(openTix).length;
+  document.getElementById('nb-c').textContent=roleBase(closedTix).length;
+  const clr=document.getElementById('nb-clr');
+  if(clr) clr.textContent=roleBase(allTix).filter(t=>t.closureRequest==='Pending').length;
+}
+// 8 AM reset removed — all closed tickets are kept and shown; use the calendar to filter by date
+function scheduleReset(){
+  document.getElementById('ref-info').textContent='';
+}
+function renderAdminMEs(){
+  document.getElementById('me-body').innerHTML=USERS.filter(u=>u.role==='ME').map((u,i)=>`<tr><td style="color:var(--muted2)">${i+1}</td><td style="font-weight:600">${u.name}</td><td>${u.first}</td><td>${u.region}</td><td>${u.rh}</td><td class="mono" style="font-size:11px">${u.email}</td><td style="font-size:11px;color:var(--muted)">${u.contact||'—'}</td></tr>`).join('');
+}
+
+// ════════ PAGINATION ════════
+function renderPgn(w,total,pg){
+  const pages=Math.ceil(total/PG),s=(pg-1)*PG+1,e=Math.min(pg*PG,total);
+  const el=document.getElementById(w+'-pgn');if(!el)return;
+  if(pages<=1){el.innerHTML='';return;}
+  const ns=[];for(let i=Math.max(1,pg-2);i<=Math.min(pages,pg+2);i++)ns.push(i);
+  el.innerHTML=`<span class="pg-info">Showing ${s}–${e} of ${total}</span><div class="pg-btns">
+    <button class="pg-btn" onclick="chPg('${w}',${pg-1})" ${pg===1?'disabled':''}>‹</button>
+    ${ns.map(n=>`<button class="pg-btn ${n===pg?'on':''}" onclick="chPg('${w}',${n})">${n}</button>`).join('')}
+    <button class="pg-btn" onclick="chPg('${w}',${pg+1})" ${pg===pages?'disabled':''}>›</button></div>`;
+}
+function chPg(w,pg){if(w==='open'){openPg=pg;renderOpen();}else if(w==='closed'){closedPg=pg;renderClosed();}else if(w==='asg'){asgPg=pg;renderAssigned();}else if(w==='clr'){renderClosures();}else if(w==='wbr'){wbrPg=pg;renderWbr();}else if(w==='ven'){venPg=pg;renderVendor();}else if(w==='vm'){vmPg=pg;renderVendorMgmt();}else{billPg=pg;renderBilling();}}
+
+// ════════ TOAST ════════
+function showToast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className=`toast ${type} show`;setTimeout(()=>t.classList.remove('show'),3200);}
+
+// ════════ ALL VENDORS (static + dynamically added) ════════
+function allVendors(){ return [{code:'SELF',name:'Self Resolution'}].concat(VENDORS, VENDORS_DYNAMIC); }
+
+// ════════ VENDOR MANAGEMENT (Admin) ════════
+function realVendors(){ return VENDORS.concat(VENDORS_DYNAMIC); }
+function renderVendorMgmt(){
+  const txt=(document.getElementById('vm-txt')?.value||'').toLowerCase();
+  const list=realVendors().filter(v=>!txt||(v.code+v.name).toLowerCase().includes(txt));
+  const total=list.length,s=(vmPg-1)*PG,pg=list.slice(s,s+PG);
+  document.getElementById('vm-body').innerHTML=pg.map((v,i)=>{
+    const mine=allTix.filter(t=>normVend(t.vendor)===normVend(v.name)||normVend(t.vendor)===normVend(v.code));
+    const assigned=mine.length;
+    const reqs=mine.filter(t=>t.closureRequest==='Pending').length;
+    const closed=mine.filter(t=>isClosedStatus(t.status)).length;
+    const amt=mine.filter(t=>isClosedStatus(t.status)).reduce((s,t)=>s+(parseFloat(t.amount)||0),0);
+    return `<tr><td style="color:var(--muted2)">${s+i+1}</td><td class="mono">${v.code}</td><td style="font-weight:600">${v.name}</td>
+      <td class="mono">${v.code}</td><td class="mono">${v.code}</td><td>${assigned}</td>
+      <td><span class="req-badge">${reqs}</span></td><td style="color:var(--green);font-weight:600">${closed}</td>
+      <td style="font-family:var(--mono)">₹${amt.toLocaleString('en-IN')}</td></tr>`;
+  }).join('')||`<tr><td colspan="9" style="text-align:center;padding:30px;color:var(--muted)">No vendors</td></tr>`;
+  renderPgn('vm',total,vmPg);
+}
+function registerVendor(){
+  let code=(document.getElementById('nv-code').value||'').trim();
+  const name=(document.getElementById('nv-name').value||'').trim();
+  if(!name){showToast('Enter vendor name','err');return;}
+  if(!code){
+    const base=name.replace(/[^A-Za-z]/g,'').substring(0,5).toUpperCase()||'VEND';
+    code=base+Math.floor(1000+Math.random()*9000);
+  }
+  if(realVendors().some(v=>v.code.toLowerCase()===code.toLowerCase())){showToast('Vendor code already exists','err');return;}
+  VENDORS_DYNAMIC.push({code,name});
+  // save to Vendors sheet via JSONP so it persists for future logins
+  if(APPS_SCRIPT_URL&&APPS_SCRIPT_URL.length>40){
+    const cbn='lk_av_'+Date.now();
+    window[cbn]=function(){};
+    const s=document.createElement('script');
+    s.src=APPS_SCRIPT_URL+'?action=addVendor&callback='+cbn+'&code='+encodeURIComponent(code)+'&name='+encodeURIComponent(name);
+    document.body.appendChild(s);
+  }
+  document.getElementById('nv-code').value='';document.getElementById('nv-name').value='';
+  renderVendorMgmt();
+  showToast(`✅ Vendor added — login: ${code} / ${code}. Saved to sheet.`,'ok');
+}
+function exportVendors(){
+  const cols=['#','Vendor Code','Vendor Name','Username','Password'];
+  const rows=realVendors().map((v,i)=>[i+1,v.code,v.name,v.code,v.code]);
+  toXlsx('Vendor Logins',cols,rows);
+}
+
+// ════════ VENDOR NAME AUTOCOMPLETE (for ME typing vendor) ════════
+// Build a real dropdown of FULL vendor names — impossible to save a fragment
+function vendorSelectHTML(ai, current){
+  const opts=allVendors();
+  // if current value isn't in the list (legacy fragment), show it as a flagged option so it's visible
+  const inList=opts.some(v=>v.name===current);
+  let html=`<select class="edit-sel" onchange="updTix(${ai},'vendor',this.value)" style="min-width:140px">`;
+  html+=`<option value="" ${!current?'selected':''}>— Select vendor —</option>`;
+  if(current && !inList) html+=`<option value="${current.replace(/"/g,'&quot;')}" selected>⚠ ${current} (fix)</option>`;
+  opts.forEach(v=>{
+    const sel=v.name===current?'selected':'';
+    html+=`<option value="${v.name.replace(/"/g,'&quot;')}" ${sel}>${v.name}</option>`;
+  });
+  html+=`</select>`;
+  return html;
+}
+function vendorSuggest(){/* replaced by vendorSelectHTML dropdown */}
+
+// ════════ VENDOR PORTAL (vendor login sees only their assigned tickets) ════════
+function normVend(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');}
+function vendorTickets(){
+  if(!CU||CU.role!=='Vendor')return [];
+  const code=normVend(CU.vendorCode), name=normVend(CU.vendorName);
+  return allTix.filter(t=>{
+    const v=normVend(t.vendor);
+    if(!v)return false;
+    if(v===code||v===name)return true;
+    // forgiving: one contains the other (handles trailing spaces, minor variations)
+    if(name.length>=4 && (name.indexOf(v)>-1 || v.indexOf(name)>-1))return true;
+    if(code.length>=4 && (code.indexOf(v)>-1 || v.indexOf(code)>-1))return true;
+    return false;
+  });
+}
+function renderVendor(){
+  const txt=(document.getElementById('ven-txt')?.value||'').toLowerCase();
+  let list=vendorTickets().filter(t=>!txt||(t.caseNumber+t.storeName+t.issue).toLowerCase().includes(txt));
+  const total=list.length,s=(venPg-1)*PG,pg=list.slice(s,s+PG);
+  // diagnostic: if nothing matches but data exists, show what we're matching against
+  let emptyMsg='No tickets assigned to you yet. When Lenskart assigns you a ticket, it appears here.';
+  if(total===0 && allTix.length>0){
+    const myCode=CU.vendorCode||'', myName=CU.vendorName||'';
+    const vendorsInData=[...new Set(allTix.map(t=>t.vendor).filter(Boolean))];
+    const sample=vendorsInData.slice(0,15).map(v=>`"${v}"`).join(', ')||'(none — column C is empty in all tickets)';
+    emptyMsg=`No tickets matched your account.<br><span style="font-size:11px">
+      Your login → name: <b>"${myName}"</b>, code: <b>"${myCode}"</b><br>
+      Vendor names currently in the ${allTix.length} loaded tickets: ${sample}<br>
+      A ticket shows here only if its Vendor (column C) matches your name/code above.</span>`;
+  }
+  document.getElementById('ven-body').innerHTML=total===0
+    ?`<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--muted)">${emptyMsg}</td></tr>`
+    :pg.map(t=>{const ai=allTix.indexOf(t);
+      const req=t.closureRequest==='Pending';
+      return `<tr>
+        <td class="mono">${t.caseNumber}</td>
+        <td><div style="font-weight:600;font-size:12.5px">${t.storeName}</div><div style="color:var(--muted2);font-size:11px">${t.storeCode}</div></td>
+        <td>${t.region}</td><td>${t.issue}</td><td>${t.detail||'—'}</td><td>${t.storePhone||'—'}</td>
+        <td><span class="badge ${statusClass(t.status)}">${t.status}</span>${req?'<br><span class="req-badge">Closure pending ME</span>':''}</td>
+        <td>${req?'<span style="color:var(--muted2);font-size:11px">Awaiting ME</span>':`<button class="save-btn" onclick="openVenModal(${ai})">Submit Work</button>`}</td>
+      </tr>`;}).join('');
+  const mine=vendorTickets();
+  const totReq=mine.filter(t=>t.closureRequest==='Pending').length;
+  const totClosed=mine.filter(t=>isClosedStatus(t.status)).length;
+  const totAmt=mine.filter(t=>isClosedStatus(t.status)).reduce((s,t)=>s+(parseFloat(t.amount)||0),0);
+  document.getElementById('ven-stats').innerHTML=`
+    <div class="scard c-accent"><div class="sl">Assigned to Me</div><div class="sv">${mine.length}</div><div class="ss">Total tickets</div></div>
+    <div class="scard c-amber"><div class="sl">Closure Requests</div><div class="sv">${totReq}</div><div class="ss">Awaiting ME approval</div></div>
+    <div class="scard c-green"><div class="sl">Total Closed</div><div class="sv">${totClosed}</div><div class="ss">Approved & closed</div></div>
+    <div class="scard c-purple"><div class="sl">Closed Amount</div><div class="sv" style="font-size:20px">₹${totAmt.toLocaleString('en-IN')}</div><div class="ss">Your earnings</div></div>`;
+  document.getElementById('ven-ttl').textContent='My Assigned Work — '+(CU.vendorName||'');
+  renderPgn('ven',total,venPg);
+}
+function openVenModal(ai){
+  venModalCase=ai; const t=allTix[ai];
+  document.getElementById('vm-ticket-info').innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;font-size:12px">
+      <div><b>Case #:</b> ${t.caseNumber}</div><div><b>Store Code:</b> ${t.storeCode||'—'}</div>
+      <div><b>Store:</b> ${t.storeName||'—'}</div><div><b>Region:</b> ${t.region||'—'}</div>
+      <div><b>Issue:</b> ${t.issue||'—'}</div><div><b>Detail:</b> ${t.detail||'—'}</div>
+      <div><b>Store Phone:</b> ${t.storePhone||'—'}</div><div><b>Ageing:</b> ${t.ageing||'0'} days</div>
+      <div><b>City/State:</b> ${(t.city||'')+' '+(t.state||'')}</div><div><b>Current Status:</b> ${t.status||'—'}</div>
+    </div>
+    <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)"><b>Description:</b><br><span style="color:var(--muted)">${t.description||'No description.'}</span></div>`;
+  document.getElementById('vm-eta').value=t.vendorETA||'';
+  ['vm-job','vm-before','vm-after'].forEach(id=>{document.getElementById(id).value='';});
+  ['pv-job','pv-before','pv-after'].forEach(id=>{document.getElementById(id).innerHTML='';});
+  document.getElementById('ven-modal').classList.remove('hidden');
+}
+function closeVenModal(){document.getElementById('ven-modal').classList.add('hidden');venModalCase=null;}
+let fileData={};
+function previewFile(input,pvId){
+  const f=input.files[0];if(!f)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    fileData[input.id]={name:f.name,type:f.type,data:e.target.result};
+    const pv=document.getElementById(pvId);
+    pv.innerHTML=f.type.startsWith('image/')?`✓ ${f.name}<br><img src="${e.target.result}">`:`✓ ${f.name} (PDF)`;
+  };
+  reader.readAsDataURL(f);
+}
+function submitVendorWork(){
+  const t=allTix[venModalCase];if(!t)return;
+  const eta=document.getElementById('vm-eta').value.trim();
+  if(!eta){showToast('Enter Vendor ETA','err');return;}
+  const amount=document.getElementById('vm-amount').value.trim();
+  if(!amount){showToast('Enter the ticket amount','err');return;}
+  if(!fileData['vm-job']||!fileData['vm-before']||!fileData['vm-after']){
+    showToast('All 3 files (Job Sheet, Before, After) are mandatory','err');return;
+  }
+  const status=document.getElementById('vm-status').value;
+  t.vendorETA=eta; t.amount=amount; t.closureRequest='Pending'; t.pendingStatus=status;
+  const btn=document.getElementById('vm-submit-btn');btn.disabled=true;btn.innerHTML='<span class="loader"></span> Saving fields...';
+  if(!(APPS_SCRIPT_URL&&APPS_SCRIPT_URL.length>40)){
+    btn.disabled=false;btn.innerHTML='📤 Request Closure';closeVenModal();renderVendor();
+    showToast('✅ Closure request recorded (demo mode)','ok');fileData={};return;
+  }
+  // STEP 1 — save text fields via JSONP GET
+  const cbn='lk_vsub_'+Date.now();
+  window[cbn]=function(d){
+    const s=document.getElementById(cbn);if(s)s.remove();delete window[cbn];
+    // STEP 2 — upload photos SEQUENTIALLY (one finishes before next starts)
+    const uploads=[['Job Sheet',fileData['vm-job']],['Before Snap',fileData['vm-before']],['After Snap',fileData['vm-after']]];
+    let i=0;
+    function next(){
+      if(i>=uploads.length){
+        btn.disabled=false;btn.innerHTML='📤 Request Closure';
+        closeVenModal();renderVendor();
+        showToast('✅ Closure request + photos submitted to ME for approval','ok');
+        fileData={};return;
+      }
+      const [slot,file]=uploads[i];
+      btn.innerHTML=`<span class="loader"></span> Uploading ${slot}... (${i+1}/3)`;
+      // use a non-cors POST; we wait a fixed beat between each so the script processes them
+      fetch(APPS_SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body:JSON.stringify({action:'vendorPhoto',caseNumber:t.caseNumber,slot,file})})
+        .catch(()=>{}).finally(()=>{ i++; setTimeout(next,1500); });
+    }
+    next();
+  };
+  const params=new URLSearchParams({action:'vendorSubmit',callback:cbn,
+    caseNumber:t.caseNumber,vendorETA:eta,status,amount,vendor:CU.vendorName||''});
+  const sc=document.createElement('script');sc.id=cbn;sc.src=APPS_SCRIPT_URL+'?'+params.toString();
+  sc.onerror=()=>{btn.disabled=false;btn.innerHTML='📤 Request Closure';showToast('Save failed — check deployment.','err');};
+  document.body.appendChild(sc);
+}
+
+// ════════ CLOSURE APPROVAL (ME/RH side) ════════
+function pendingClosures(){
+  const base=roleBase(allTix);
+  return base.filter(t=>t.closureRequest==='Pending');
+}
+// dedicated tab listing all closure requests with documents + amount
+function renderClosures(){
+  const view=document.getElementById('clr-view')?.value||'Pending';
+  const txt=(document.getElementById('clr-txt')?.value||'').toLowerCase();
+  let base=roleBase(allTix).filter(t=>t.closureRequest);
+  if(view==='Pending') base=base.filter(t=>t.closureRequest==='Pending');
+  base=base.filter(t=>!txt||(t.caseNumber+t.storeName+(t.vendor||'')).toLowerCase().includes(txt));
+  const canApprove=CU.role==='ME'||CU.role==='RH'||CU.role==='Admin';
+  document.getElementById('clr-body').innerHTML=base.length===0
+    ?`<tr><td colspan="10" style="text-align:center;padding:40px;color:var(--muted)">No closure requests ${view==='Pending'?'pending':'found'}.</td></tr>`
+    :base.map(t=>{
+      const pend=t.closureRequest==='Pending';
+      return `<tr>
+        <td class="mono">${t.caseNumber}</td>
+        <td><div style="font-weight:600;font-size:12.5px">${t.storeName}</div><div style="color:var(--muted2);font-size:11px">${t.storeCode}</div></td>
+        <td>${t.region}</td><td>${t.me}</td><td>${t.vendor||'—'}</td><td>${t.vendorETA||'—'}</td>
+        <td style="font-family:var(--mono);font-weight:600">${t.amount?'₹'+t.amount:'—'}</td>
+        <td>${docLinks(t)}</td>
+        <td><span class="badge ${t.closureRequest==='Approved'?'b-closed':t.closureRequest==='Rejected'?'b-reopen':'b-awaiting'}">${t.closureRequest}</span></td>
+        <td>${pend&&canApprove?`<button class="btn-sm btn-green" style="padding:4px 10px;font-size:11px" onclick="openApprModal('${t.caseNumber}')">Review</button>`:'<span style="color:var(--muted2);font-size:11px">—</span>'}</td>
+      </tr>`;}).join('');
+  const pendN=roleBase(allTix).filter(t=>t.closureRequest==='Pending').length;
+  const apprN=roleBase(allTix).filter(t=>t.closureRequest==='Approved').length;
+  const totalAmt=roleBase(allTix).filter(t=>t.closureRequest==='Pending').reduce((s,t)=>s+(parseFloat(t.amount)||0),0);
+  document.getElementById('clr-stats').innerHTML=`
+    <div class="scard c-amber"><div class="sl">Pending Requests</div><div class="sv">${pendN}</div><div class="ss">Awaiting your review</div></div>
+    <div class="scard c-green"><div class="sl">Approved</div><div class="sv">${apprN}</div><div class="ss">Closed via approval</div></div>
+    <div class="scard c-accent"><div class="sl">Pending Amount</div><div class="sv" style="font-size:20px">₹${totalAmt.toLocaleString('en-IN')}</div><div class="ss">Sum of pending tickets</div></div>`;
+  const badge=document.getElementById('nb-clr');if(badge)badge.textContent=pendN;
+}
+
+// ════════ WBR TICKETS (AC WBR / Signage WBR) ════════
+function setWbrType(type){
+  wbrType=type; wbrPg=1;
+  document.getElementById('wbr-tab-ac').className='btn-sm'+(type==='ac'?' btn-accent':'');
+  document.getElementById('wbr-tab-sig').className='btn-sm'+(type==='sig'?' btn-accent':'');
+  document.getElementById('wbr-tbl-title').textContent=type==='ac'?'AC WBR Tickets':'Signage WBR Tickets';
+  renderWbr();
+}
+function clearWbrFilters(){
+  F.wreg.clear();F.wme.clear();
+  document.getElementById('wbr-txt').value='';
+  markFbtn('wreg');markFbtn('wme');wbrPg=1;renderWbr();
+}
+function wbrBase(){
+  // all tickets (open+closed) matching the sub-tab issue, role-filtered
+  const all=roleBase(allTix);
+  const kw=wbrType==='ac'?'ac':'signage';
+  return all.filter(t=>(t.issue||'').toLowerCase().includes(kw));
+}
+function renderWbr(){
+  // populate region/ME filter dropdowns from WBR data
+  fillFdrop('wreg',[...new Set(wbrBase().map(t=>t.region).filter(Boolean))].sort());
+  fillFdrop('wme',[...new Set(wbrBase().map(t=>t.me).filter(Boolean))].sort());
+  const txt=(document.getElementById('wbr-txt')?.value||'').toLowerCase();
+  let list=wbrBase().filter(t=>{
+    const mt=!txt||(t.caseNumber+t.storeName+t.me+t.issue+(t.vendor||'')).toLowerCase().includes(txt);
+    const mr=!F.wreg.size||F.wreg.has(t.region);
+    const mm=!F.wme.size||F.wme.has(t.me);
+    return mt&&mr&&mm;
+  });
+  const total=list.length,s=(wbrPg-1)*PG,pg=list.slice(s,s+PG);
+  document.getElementById('wbr-body').innerHTML=total===0
+    ?`<tr><td colspan="14" style="text-align:center;padding:40px;color:var(--muted)">No ${wbrType==='ac'?'AC':'Signage'} WBR tickets found.</td></tr>`
+    :pg.map(t=>{
+      const ai=allTix.indexOf(t);
+      const editing=wbrEdit.has(t.caseNumber);
+      const cells = editing
+        ? `<td><input class="edit-inp" type="text" value="${t.eta||''}" placeholder="DD-MM-YYYY" maxlength="10" oninput="etaFormat(this);updTix(${ai},'eta',this.value)"></td>
+           <td>${vendorSelectHTML(ai,t.vendor||'')}</td>
+           <td><input class="edit-inp" value="${t.remarks||''}" placeholder="Remarks" oninput="updTix(${ai},'remarks',this.value)"></td>
+           <td><input class="edit-inp" value="${t.vendorPortalAC||''}" placeholder="AC #" oninput="updTix(${ai},'vendorPortalAC',this.value)"></td>
+           <td><select class="edit-sel" onchange="updTix(${ai},'status',this.value)">${['Assigned','Awaiting Assignment','In Progress','Re-Open','Resolved','Closed'].map(o=>`<option ${t.status===o?'selected':''}>${o}</option>`).join('')}</select></td>
+           <td><input class="edit-inp" type="text" value="${t.firstVisitDate||''}" placeholder="DD-MM-YYYY" maxlength="10" oninput="etaFormat(this);updTix(${ai},'firstVisitDate',this.value)"></td>`
+        : `<td>${t.eta||'—'}</td><td>${t.vendor||'—'}</td><td>${t.remarks||'—'}</td><td>${t.vendorPortalAC||'—'}</td>
+           <td><span class="badge ${statusClass(t.status)}">${t.status}</span></td><td>${t.firstVisitDate||'—'}</td>`;
+      return `<tr>
+        <td class="mono">${t.caseNumber}</td>
+        <td><div style="font-weight:600;font-size:12.5px">${t.storeName}</div><div style="color:var(--muted2);font-size:11px">${t.storeCode}</div></td>
+        <td>${t.region}</td><td>${t.me}</td><td><div>${t.issue}</div><div style="color:var(--muted2);font-size:11px">${t.detail||''}</div></td>
+        <td><span style="font-family:var(--mono);font-size:12px">${t.ageing}d</span></td><td>${t.tat||'—'}</td>
+        ${cells}
+        <td>${editing
+          ? `<button class="btn-sm btn-accent" style="padding:4px 10px;font-size:11px" onclick="saveWbrRow('${t.caseNumber}')">💾 Save</button>`
+          : `<button class="btn-sm" style="padding:4px 10px;font-size:11px" onclick="editWbrRow('${t.caseNumber}')">✏️ Edit</button>`}</td>
+      </tr>`;}).join('');
+  const scope=CU.role==='ME'?`My ${wbrType==='ac'?'AC':'Signage'} WBR`:CU.role==='RH'?`Region ${wbrType==='ac'?'AC':'Signage'} WBR`:`All ${wbrType==='ac'?'AC':'Signage'} WBR (Pan India)`;
+  document.getElementById('wbr-ttl').textContent=scope;
+  const withVisit=list.filter(t=>t.firstVisitDate).length;
+  document.getElementById('wbr-stats').innerHTML=`
+    <div class="scard c-accent"><div class="sl">${wbrType==='ac'?'AC':'Signage'} Tickets</div><div class="sv">${total}</div><div class="ss">In this view</div></div>
+    <div class="scard c-green"><div class="sl">First Visit Set</div><div class="sv">${withVisit}</div><div class="ss">Have a visit date</div></div>
+    <div class="scard c-amber"><div class="sl">Pending Visit</div><div class="sv">${total-withVisit}</div><div class="ss">No date yet</div></div>
+    <div class="scard c-purple"><div class="sl">Regions</div><div class="sv">${[...new Set(list.map(t=>t.region))].length}</div><div class="ss">Covered</div></div>`;
+  renderPgn('wbr',total,wbrPg);
+}
+function editWbrRow(caseNumber){ wbrEdit.add(caseNumber); renderWbr(); }
+function saveWbrRow(caseNumber){
+  const t=allTix.find(x=>x.caseNumber===caseNumber);if(!t)return;
+  // enforce same vendor/assignment rule
+  const vendorRaw=(t.vendor||'').trim();
+  const selfRes=/^self/i.test(vendorRaw)||vendorRaw.toLowerCase()==='self resolution';
+  const inBank=vendorRaw!==''&&allVendors().some(v=>v.name===vendorRaw||v.code.toLowerCase()===vendorRaw.toLowerCase());
+  if(vendorRaw!==''&&!selfRes&&!inBank){showToast('⚠️ "'+vendorRaw+'" is not a registered vendor.','err');return;}
+  if(/^assigned$/i.test(t.status)&&!(inBank||selfRes)){
+    t.status='Awaiting Assignment';showToast('⚠️ Pick a vendor to assign. Kept as Awaiting Assignment.','err');
+  }
+  wbrEdit.delete(caseNumber);
+  if(isClosedStatus(t.status)&&!t.closedAt) t.closedAt=new Date().toLocaleString('en-IN',{hour:'2-digit',minute:'2-digit'});
+  pushWbrToSheet(t);
+  splitTickets();renderWbr();updateBadges();
+  showToast(`💾 WBR ticket ${caseNumber} saved`,'ok');
+}
+// save WBR row to sheet incl First Visit Date (JSONP GET, last-write-wins)
+function pushWbrToSheet(t){
+  if(!APPS_SCRIPT_URL||APPS_SCRIPT_URL.length<40)return;
+  const cbn='lk_wbr_'+Date.now();window[cbn]=function(){const s=document.getElementById(cbn);if(s)s.remove();delete window[cbn];};
+  const params=new URLSearchParams({action:'saveRow',callback:cbn,
+    caseNumber:t.caseNumber,eta:t.eta||'',vendor:t.vendor||'',remarks:t.remarks||'',
+    vendorAC:t.vendorPortalAC||'',status:t.status||'',firstVisitDate:t.firstVisitDate||'',closedBy:(CU&&CU.name)||''});
+  const sc=document.createElement('script');sc.id=cbn;sc.src=APPS_SCRIPT_URL+'?'+params.toString();document.body.appendChild(sc);
+}
+// build "Click here" links for the 3 docs (Drive URLs)
+function docLinks(t){
+  const items=[['Job Sheet',t.jobSheet],['Before',t.beforeSnap],['After',t.afterSnap]];
+  const links=items.filter(([l,d])=>d&&/^https?:/.test(d)).map(([l,d])=>
+    `${l}: <a class="doc-link" href="${d}" target="_blank">Click here</a>`);
+  return links.length?links.join('<br>'):'<span style="color:var(--muted2);font-size:11px">—</span>';
+}
+function openApprModal(caseNumber){
+  apprCase=caseNumber; const t=allTix.find(x=>x.caseNumber===caseNumber);if(!t)return;
+  document.getElementById('appr-body').innerHTML=`
+    <div class="vm-info"><b>Case ${t.caseNumber}</b> · ${t.storeName}<br>${t.issue} — ${t.detail||''}<br>
+      Vendor: <b>${t.vendor||'—'}</b> · Vendor ETA: <b>${t.vendorETA||'—'}</b><br>
+      Amount: <b>₹${t.amount||'—'}</b> · Requested status: <b>${t.pendingStatus||'Closed'}</b></div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:10px">Click each link to open the photo the vendor uploaded:</p>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      ${docRow('Job Sheet',t.jobSheet)}
+      ${docRow('Before Work Snap',t.beforeSnap)}
+      ${docRow('After Work Snap',t.afterSnap)}
+    </div>`;
+  document.getElementById('appr-modal').classList.remove('hidden');
+}
+function docRow(label,link){
+  if(link&&/^https?:/.test(link))
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--surface2);border-radius:6px"><span>${label}</span><a class="doc-link" href="${link}" target="_blank">Click here ↗</a></div>`;
+  return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--surface2);border-radius:6px"><span>${label}</span><span style="color:var(--muted2);font-size:11px">Link pending — vendor's upload still syncing to Drive</span></div>`;
+}
+function closeApprModal(){document.getElementById('appr-modal').classList.add('hidden');apprCase=null;}
+function decideClosure(approve){
+  const t=allTix.find(x=>x.caseNumber===apprCase);if(!t)return;
+  if(approve){
+    t.status=t.pendingStatus||'Closed'; t.closureRequest='Approved';
+    t.closedAt=new Date().toLocaleString('en-IN',{hour:'2-digit',minute:'2-digit'});
+    showToast(`✅ Closure approved — ${t.caseNumber} marked ${t.status}, moved to Closed`,'ok');
+  }else{
+    t.closureRequest='Rejected';
+    showToast(`Closure rejected — ${t.caseNumber} stays open`,'err');
+  }
+  if(APPS_SCRIPT_URL&&APPS_SCRIPT_URL.length>40){
+    const cbn='lk_dc_'+Date.now();window[cbn]=function(){const s=document.getElementById(cbn);if(s)s.remove();delete window[cbn];};
+    const params=new URLSearchParams({action:'decideClosure',callback:cbn,caseNumber:t.caseNumber,approve:approve?'true':'false',newStatus:t.status,by:(CU&&CU.name)||''});
+    const sc=document.createElement('script');sc.id=cbn;sc.src=APPS_SCRIPT_URL+'?'+params.toString();document.body.appendChild(sc);
+  }
+  closeApprModal();splitTickets();applyOpenFilter();renderOpen();renderClosed();renderAssigned();renderClosures();updateBadges();
+}
+
+// ════════ BULK DELETE + BULK STATUS (Admin, in Assigned tab) ════════
+function toggleBulk(caseNumber,on){if(on)bulkSel.add(caseNumber);else bulkSel.delete(caseNumber);updateBulkBar();}
+function updateBulkBar(){
+  const bar=document.getElementById('bulkbar');if(!bar)return;
+  bar.classList.toggle('hidden',bulkSel.size===0);
+  const c=document.getElementById('bulk-count');if(c)c.textContent=bulkSel.size;
+}
+function bulkSelectAllVisible(on){
+  const data=asgFil.length?asgFil:assignedFilteredData();
+  if(on)data.forEach(t=>bulkSel.add(t.caseNumber));else bulkSel.clear();
+  renderAssigned();updateBulkBar();
+}
+function bulkDelete(){
+  if(bulkSel.size===0)return;
+  if(!confirm(`Delete ${bulkSel.size} ticket(s) permanently from the portal and Google Sheet? This cannot be undone.`))return;
+  const codes=[...bulkSel];
+  allTix=allTix.filter(t=>!bulkSel.has(t.caseNumber));
+  if(APPS_SCRIPT_URL&&APPS_SCRIPT_URL.length>40){
+    fetch(APPS_SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({action:'bulkDelete',caseNumbers:codes})}).catch(()=>{});
+  }
+  bulkSel.clear();splitTickets();buildFilterDropdowns();applyOpenFilter();renderOpen();renderClosed();renderAssigned();updateBadges();updateBulkBar();
+  showToast(`🗑️ Deleted ${codes.length} ticket(s)`,'ok');
+}
+function bulkStatus(newStatus){
+  if(!newStatus||bulkSel.size===0)return;
+  const codes=[...bulkSel];
+  codes.forEach(cn=>{const t=allTix.find(x=>x.caseNumber===cn);if(t){t.status=newStatus;if(isClosedStatus(newStatus))t.closedAt=new Date().toLocaleString('en-IN',{hour:'2-digit',minute:'2-digit'});}});
+  if(APPS_SCRIPT_URL&&APPS_SCRIPT_URL.length>40){
+    fetch(APPS_SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({action:'bulkStatus',caseNumbers:codes,status:newStatus})}).catch(()=>{});
+  }
+  bulkSel.clear();splitTickets();applyOpenFilter();renderOpen();renderClosed();renderAssigned();updateBadges();updateBulkBar();
+  showToast(`✅ ${codes.length} ticket(s) set to ${newStatus}`,'ok');
+}
+
+// ════════ EXPORTS — Excel / PDF / PPT ════════
+function tsStamp(){return new Date().toISOString().slice(0,10);}
+
+// generic data export (open/closed/billing tables)
+function exportData(which,fmt){
+  let rows=[],cols=[],title='';
+  if(which==='open'){title='Open Tickets';
+    cols=['Case Number','Store Name','Store Code','Region','ME','Issue','Detail','Ageing','TAT','ETA','Vendor','Remarks','Vendor AC','Status'];
+    rows=openFil.map(t=>[t.caseNumber,t.storeName,t.storeCode,t.region,t.me,t.issue,t.detail,t.ageing,t.tat,t.eta,t.vendor,t.remarks,t.vendorPortalAC,t.status]);
+  }else if(which==='closed'){title='Closed Tickets';
+    cols=['Case Number','Store Name','Store Code','Region','ME','Issue','ETA Given','Vendor','Remarks','Ageing','Closed At'];
+    rows=closedFil.map(t=>[t.caseNumber,t.storeName,t.storeCode,t.region,t.me,t.issue,t.eta,t.vendor,t.remarks,t.ageing,t.closedAt]);
+  }else if(which==='billing'){title='Billing Records';
+    if(!billingRows.length){showToast('No billing data to export','err');return;}
+    cols=billingHeaders;rows=billingRows.map(r=>billingHeaders.map(h=>r[h]??''));
+  }else if(which==='assigned'){title='Assigned Ticket Details';
+    cols=['Case Number','Store Name','Store Code','Region','ME','Issue','Created','ETA','Vendor','Vendor AC','Remarks','Status','Closed At'];
+    rows=(asgFil.length?asgFil:assignedFilteredData()).map(t=>[t.caseNumber,t.storeName,t.storeCode,t.region,t.me,t.issue,t.createdDate,t.eta,t.vendor,t.vendorPortalAC,t.remarks,t.status,t.closedAt]);
+  }else if(which==='wbr'){title=(wbrType==='ac'?'AC':'Signage')+' WBR Tickets';
+    cols=['Case Number','Store Name','Store Code','Region','ME','Issue','Detail','Ageing','TAT','ETA','Vendor','Remarks','Vendor AC','Status','First Visit Date'];
+    rows=wbrBase().filter(t=>{const txt=(document.getElementById('wbr-txt')?.value||'').toLowerCase();
+      return (!txt||(t.caseNumber+t.storeName+t.me).toLowerCase().includes(txt))&&(!F.wreg.size||F.wreg.has(t.region))&&(!F.wme.size||F.wme.has(t.me));})
+      .map(t=>[t.caseNumber,t.storeName,t.storeCode,t.region,t.me,t.issue,t.detail,t.ageing,t.tat,t.eta,t.vendor,t.remarks,t.vendorPortalAC,t.status,t.firstVisitDate]);
+  }
+  if(!rows.length){showToast('Nothing to export','err');return;}
+  if(fmt==='xlsx')toXlsx(title,cols,rows);
+  else if(fmt==='pdf')toPdf(title,cols,rows);
+}
+
+function toXlsx(title,cols,rows){
+  const wb=XLSX.utils.book_new();
+  const ws=XLSX.utils.aoa_to_sheet([cols,...rows]);
+  ws['!cols']=cols.map(c=>({wch:Math.max(12,c.length+2)}));
+  XLSX.utils.book_append_sheet(wb,ws,title.slice(0,28));
+  XLSX.writeFile(wb,`Lenskart_${title.replace(/ /g,'_')}_${tsStamp()}.xlsx`);
+  showToast(`⬇ ${title} exported to Excel`,'ok');
+}
+function toPdf(title,cols,rows){
+  const {jsPDF}=window.jspdf;const doc=new jsPDF({orientation:cols.length>7?'landscape':'portrait'});
+  doc.setFontSize(15);doc.setTextColor(84,87,230);doc.text(`Lenskart Maintenance — ${title}`,14,15);
+  doc.setFontSize(9);doc.setTextColor(120);doc.text(`Generated ${new Date().toLocaleString()} · ${rows.length} records`,14,21);
+  doc.autoTable({head:[cols],body:rows,startY:26,styles:{fontSize:7,cellPadding:2},
+    headStyles:{fillColor:[84,87,230],textColor:255,fontSize:7.5},alternateRowStyles:{fillColor:[246,247,253]},margin:{left:10,right:10}});
+  doc.save(`Lenskart_${title.replace(/ /g,'_')}_${tsStamp()}.pdf`);
+  showToast(`⬇ ${title} exported to PDF`,'ok');
+}
+
+// summary export
+function exportSummary(fmt){
+  if(!lastSummary)buildSummary();
+  const {regs,allO,allC,mes,iss}=lastSummary;
+  const sections=[
+    {name:'By Region',keys:regs,o:r=>allO.filter(t=>t.region===r).length,c:r=>allC.filter(t=>t.region===r).length},
+    {name:'By ME',keys:mes,o:m=>allO.filter(t=>t.me===m).length,c:m=>allC.filter(t=>t.me===m).length},
+    {name:'By Issue',keys:iss,o:i=>allO.filter(t=>t.issue===i).length,c:i=>allC.filter(t=>t.issue===i).length},
+  ];
+  if(fmt==='xlsx'){
+    const wb=XLSX.utils.book_new();
+    sections.forEach(sec=>{
+      const aoa=[[sec.name,'Open','Closed'],...sec.keys.map(k=>[k,sec.o(k),sec.c(k)])];
+      const ws=XLSX.utils.aoa_to_sheet(aoa);ws['!cols']=[{wch:24},{wch:8},{wch:8}];
+      XLSX.utils.book_append_sheet(wb,ws,sec.name.slice(0,28));
+    });
+    XLSX.writeFile(wb,`Lenskart_Summary_${tsStamp()}.xlsx`);showToast('⬇ Summary exported to Excel','ok');
+  }else if(fmt==='pdf'){
+    const {jsPDF}=window.jspdf;const doc=new jsPDF();let y=15;
+    doc.setFontSize(15);doc.setTextColor(84,87,230);doc.text('Lenskart Maintenance — Summary',14,y);y+=6;
+    doc.setFontSize(9);doc.setTextColor(120);doc.text(`Generated ${new Date().toLocaleString()}`,14,y);y+=4;
+    sections.forEach(sec=>{
+      doc.autoTable({head:[[sec.name,'Open','Closed']],body:sec.keys.map(k=>[k,sec.o(k),sec.c(k)]),startY:y+4,
+        styles:{fontSize:8,cellPadding:2},headStyles:{fillColor:[84,87,230],textColor:255},margin:{left:14,right:14}});
+      y=doc.lastAutoTable.finalY+4;
+    });
+    doc.save(`Lenskart_Summary_${tsStamp()}.pdf`);showToast('⬇ Summary exported to PDF','ok');
+  }else if(fmt==='pptx'){
+    const p=new PptxGenJS();
+    let s0=p.addSlide();s0.background={color:'5457E6'};
+    s0.addText('Lenskart Maintenance',{x:0.5,y:2,w:9,h:1,fontSize:36,bold:true,color:'FFFFFF',align:'center'});
+    s0.addText('Summary Report — '+new Date().toLocaleDateString(),{x:0.5,y:3,w:9,h:0.5,fontSize:16,color:'E0E0FF',align:'center'});
+    s0.addText(`Total Open: ${allO.length}   |   Closed Today: ${allC.length}`,{x:0.5,y:4,w:9,h:0.5,fontSize:14,color:'FFFFFF',align:'center'});
+    sections.forEach(sec=>{
+      const s=p.addSlide();
+      s.addText(sec.name,{x:0.4,y:0.3,w:9,h:0.6,fontSize:22,bold:true,color:'5457E6'});
+      const tbl=[[{text:sec.name,options:{bold:true,fill:'5457E6',color:'FFFFFF'}},{text:'Open',options:{bold:true,fill:'5457E6',color:'FFFFFF'}},{text:'Closed',options:{bold:true,fill:'5457E6',color:'FFFFFF'}}]];
+      sec.keys.forEach(k=>tbl.push([String(k),String(sec.o(k)),String(sec.c(k))]));
+      s.addTable(tbl,{x:0.4,y:1.1,w:9,fontSize:11,border:{type:'solid',color:'DDE0F2',pt:1},rowH:0.3});
+    });
+    p.writeFile({fileName:`Lenskart_Summary_${tsStamp()}.pptx`});showToast('⬇ Summary exported to PowerPoint','ok');
+  }
+}
+
+// pivot export
+function exportPivot(fmt){
+  if(!lastPivot){showToast('Generate a pivot first','err');return;}
+  const {rowLabel,cols,rows,matrix,colTotals,grand,colF,valLabel}=lastPivot;
+  const head=[rowLabel,...cols.map(c=>c||valLabel),...(colF?['Total']:[])];
+  const body=rows.map((r,ri)=>[r,...matrix[ri],...(colF?[matrix[ri].reduce((a,b)=>a+b,0)]:[])]);
+  const totalRow=['Grand Total',...colTotals,...(colF?[grand]:[])];
+  if(fmt==='xlsx'){
+    const wb=XLSX.utils.book_new();const ws=XLSX.utils.aoa_to_sheet([head,...body,totalRow]);
+    ws['!cols']=head.map(()=>({wch:14}));
+    XLSX.utils.book_append_sheet(wb,ws,'Pivot');XLSX.writeFile(wb,`Lenskart_Pivot_${tsStamp()}.xlsx`);showToast('⬇ Pivot exported to Excel','ok');
+  }else if(fmt==='pdf'){
+    const {jsPDF}=window.jspdf;const doc=new jsPDF({orientation:head.length>6?'landscape':'portrait'});
+    doc.setFontSize(15);doc.setTextColor(84,87,230);doc.text('Lenskart Maintenance — Pivot Analysis',14,15);
+    doc.setFontSize(9);doc.setTextColor(120);doc.text(`Generated ${new Date().toLocaleString()}`,14,21);
+    doc.autoTable({head:[head],body:[...body,totalRow],startY:26,styles:{fontSize:8,cellPadding:2.5},
+      headStyles:{fillColor:[84,87,230],textColor:255},margin:{left:10,right:10}});
+    doc.save(`Lenskart_Pivot_${tsStamp()}.pdf`);showToast('⬇ Pivot exported to PDF','ok');
+  }else if(fmt==='pptx'){
+    const p=new PptxGenJS();const s=p.addSlide();
+    s.addText('Pivot Analysis',{x:0.4,y:0.3,w:9,h:0.6,fontSize:24,bold:true,color:'5457E6'});
+    const tbl=[head.map(h=>({text:String(h),options:{bold:true,fill:'5457E6',color:'FFFFFF'}}))];
+    body.forEach(r=>tbl.push(r.map(c=>String(c))));tbl.push(totalRow.map(c=>({text:String(c),options:{bold:true,fill:'ECEDFF'}})));
+    s.addTable(tbl,{x:0.3,y:1.1,w:9.4,fontSize:10,border:{type:'solid',color:'DDE0F2',pt:1},rowH:0.3});
+    p.writeFile({fileName:`Lenskart_Pivot_${tsStamp()}.pptx`});showToast('⬇ Pivot exported to PowerPoint','ok');
+  }
+}
+function exportMEs(){
+  const cols=['#','Full Name','First Name','Region','RH','Email'];
+  const rows=USERS.filter(u=>u.role==='ME').map((u,i)=>[i+1,u.name,u.first,u.region,u.rh,u.email]);
+  toXlsx('ME List',cols,rows);
+}
+</script>
+</body>
+</html>
