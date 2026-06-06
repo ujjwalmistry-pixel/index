@@ -1425,7 +1425,7 @@ function onStoreCodeInput(val){
   val=val.trim().toUpperCase();document.getElementById('sc-store-code').value=val;
   const hint=document.getElementById('sc-store-hint');
   if(val.length<4){clearScStoreFields();hint.textContent='';return;}
-  const store=STORE_MASTER.find(s=>s.code.toUpperCase()===val);
+  const store=allStores().find(s=>s.code.toUpperCase()===val);
   if(store){
     document.getElementById('sc-store-name').value=store.name||'';
     document.getElementById('sc-vendor-name').value=store.vendor||'';
@@ -1743,6 +1743,232 @@ function refreshData(){
 function gv(r,...keys){for(const k of keys){if(r[k]!==undefined&&r[k]!=='')return r[k];}const want=keys.map(k=>k.toLowerCase().trim());for(const actual in r){if(want.includes(actual.toLowerCase().trim())&&r[actual]!==''&&r[actual]!==undefined)return r[actual];}return'';}
 function normalizeTicket(r){return{caseNumber:String(gv(r,'Case Number','Case')||''),eta:gv(r,'ETA'),vendor:gv(r,'Vendor'),remarks:gv(r,'Remarks'),vendorPortalAC:gv(r,'Vendor Portal AC Tickets'),storeCode:gv(r,'Store Code'),region:gv(r,'Region'),me:gv(r,'ME','ME Name'),storeName:gv(r,'Store Name'),status:gv(r,'Status')||'Assigned',ageing:String(gv(r,'Ageing')||'0'),issue:gv(r,'Issue'),detail:gv(r,'Detail'),state:gv(r,'Store_State','State'),city:gv(r,'Store_City','City'),tat:gv(r,'TAT'),description:gv(r,'Description'),closedAt:gv(r,'Closed At'),storePhone:gv(r,'Store Phone Number','Store Phone'),vendorETA:gv(r,'Vendor ETA'),jobSheet:gv(r,'Job Sheet'),beforeSnap:gv(r,'Before Snap'),afterSnap:gv(r,'After Snap'),closureRequest:gv(r,'Closure Request'),amount:gv(r,'Vendor Amount','Amount'),pendingStatus:gv(r,'Pending Status'),firstVisitDate:gv(r,'First Visit Date'),createdDate:gv(r,'Case Creation Time','Date'),rh:(USERS.find(u=>u.first===gv(r,'ME','ME Name'))||{}).rh||''};}
 
+// ════════ ADMIN PANEL TABS ════════
+let DYNAMIC_USERS   = []; // MEs/RHs added via upload
+let DYNAMIC_STORES  = []; // stores added via upload
+let storeMasterPg   = 1;
+let admVendorPg     = 1;
+const ADM_PG        = 20;
+
+function setAdmTab(tab) {
+  ['tickets','me','store','vendor'].forEach(t => {
+    document.getElementById('adm-tab-'+t).className   = 'btn-sm'+(t===tab?' btn-accent':'');
+    document.getElementById('adm-panel-'+t).classList.toggle('hidden', t!==tab);
+  });
+  if (tab==='me')     renderAdminMEs();
+  if (tab==='store')  renderStoreMaster();
+  if (tab==='vendor') renderAdminVendors();
+}
+
+// ── ME / RH MASTER UPLOAD ─────────────────────────────────────────
+function handleMEMasterUpload(inp) {
+  if (!inp.files||!inp.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const wb   = XLSX.read(new Uint8Array(e.target.result),{type:'array'});
+      const ws   = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws,{defval:''});
+      if (!rows.length){showToast('File empty','err');return;}
+      let added=0,updated=0;
+      rows.forEach(r => {
+        const name  = String(r['Full Name']||r['full_name']||r['Name']||'').trim();
+        const first = String(r['First Name']||r['first_name']||r['First']||name.split(' ')[0]||'').trim();
+        const email = String(r['Email']||r['email']||'').trim().toLowerCase();
+        const role  = String(r['Role']||r['role']||'ME').trim();
+        const region= String(r['Region']||r['region']||'').trim();
+        const rh    = String(r['RH Name']||r['RH']||r['rh']||'').trim();
+        const contact=String(r['Contact']||r['contact']||r['Phone']||'').trim();
+        if (!name||!email) return;
+        const pass  = first.toLowerCase()+'@lk';
+        const entry = {email,pass,name,first,role,region,rh,contact};
+        // check if already exists in static USERS
+        const inStatic = USERS.find(u=>u.email===email);
+        if (inStatic) { Object.assign(inStatic,entry); updated++; return; }
+        // check dynamic
+        const idx = DYNAMIC_USERS.findIndex(u=>u.email===email);
+        if (idx>-1) { DYNAMIC_USERS[idx]=entry; updated++; }
+        else        { DYNAMIC_USERS.push(entry); added++; }
+      });
+      renderAdminMEs();
+      showToast(`👷 ME/RH master: ${added} added, ${updated} updated`,'ok');
+      // push to sheet
+      if (APPS_SCRIPT_URL&&APPS_SCRIPT_URL.length>40)
+        fetch(APPS_SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},
+          body:JSON.stringify({action:'uploadMEMaster',rows:DYNAMIC_USERS})}).catch(()=>{});
+    } catch(err){showToast('Could not read file: '+err.message,'err');}
+  };
+  reader.readAsArrayBuffer(inp.files[0]);
+}
+
+function renderAdminMEs() {
+  const q = (document.getElementById('adm-me-search')?.value||'').toLowerCase();
+  const allMEs = [...USERS, ...DYNAMIC_USERS].filter(u=>
+    ['ME','RH','HO','Admin'].includes(u.role) &&
+    (!q || (u.name+u.region+u.role+u.email).toLowerCase().includes(q))
+  );
+  document.getElementById('me-body').innerHTML = allMEs.map((u,i)=>`<tr>
+    <td style="color:var(--muted2)">${i+1}</td>
+    <td style="font-weight:600">${u.name}</td>
+    <td>${u.first}</td>
+    <td><span class="badge ${u.role==='Admin'?'b-closed':u.role==='RH'?'b-assigned':u.role==='HO'?'b-progress':'b-awaiting'}">${u.role}</span></td>
+    <td>${u.region||'—'}</td>
+    <td>${u.rh||'—'}</td>
+    <td class="mono" style="font-size:11px">${u.email}</td>
+    <td class="mono" style="font-size:11px">${u.pass||u.first?.toLowerCase()+'@lk'}</td>
+    <td style="font-size:11px;color:var(--muted)">${u.contact||'—'}</td>
+    <td>${DYNAMIC_USERS.includes(u)?`<button class="btn-sm btn-red-o" style="padding:3px 9px;font-size:10px" onclick="removeDynUser('${u.email}')">✕ Remove</button>`:'<span style="color:var(--muted2);font-size:10px">Built-in</span>'}</td>
+  </tr>`).join('') || `<tr><td colspan="10" style="text-align:center;padding:28px;color:var(--muted)">No users found</td></tr>`;
+}
+
+function removeDynUser(email) {
+  DYNAMIC_USERS = DYNAMIC_USERS.filter(u=>u.email!==email);
+  renderAdminMEs(); showToast('User removed','ok');
+}
+
+function downloadMETemplate() {
+  const cols = ['Full Name','First Name','Email','Role','Region','RH Name','Contact'];
+  const sample = [['Ravi Kumar','Ravi','ravi.kumar@lenskart.com','ME','North','Naveen Thakur','9876543210']];
+  toXlsx('ME_RH_Template', cols, sample);
+}
+
+// ── STORE MASTER UPLOAD ───────────────────────────────────────────
+function handleStoreMasterUpload(inp) {
+  if (!inp.files||!inp.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const wb   = XLSX.read(new Uint8Array(e.target.result),{type:'array'});
+      const ws   = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws,{defval:''});
+      if (!rows.length){showToast('File empty','err');return;}
+      let added=0,updated=0;
+      rows.forEach(r => {
+        const code   = String(r['Store Code']||r['store_code']||r['Code']||'').trim().toUpperCase();
+        const name   = String(r['Store Name']||r['store_name']||r['Name']||'').trim();
+        const region = String(r['Region']||r['region']||'').trim();
+        const me     = String(r['ME Name']||r['ME']||r['me']||'').trim();
+        const vendor = String(r['Vendor Name']||r['Vendor']||r['vendor']||'').trim();
+        const state  = String(r['State']||r['state']||r['Store_State']||'').trim();
+        const city   = String(r['City']||r['city']||r['Store_City']||'').trim();
+        if (!code||!name) return;
+        const entry = {code,name,region,me,vendor,state,city};
+        // update STORE_MASTER if exists
+        const si = STORE_MASTER.findIndex(s=>s.code.toUpperCase()===code);
+        if (si>-1)  { STORE_MASTER[si]=entry; updated++; }
+        else {
+          // check dynamic
+          const di = DYNAMIC_STORES.findIndex(s=>s.code.toUpperCase()===code);
+          if (di>-1){ DYNAMIC_STORES[di]=entry; updated++; }
+          else      { DYNAMIC_STORES.push(entry); added++; }
+        }
+      });
+      storeMasterPg=1; renderStoreMaster();
+      showToast(`🏪 Store master: ${added} added, ${updated} updated`,'ok');
+      if (APPS_SCRIPT_URL&&APPS_SCRIPT_URL.length>40)
+        fetch(APPS_SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},
+          body:JSON.stringify({action:'uploadStoreMaster',stores:[...STORE_MASTER,...DYNAMIC_STORES]})}).catch(()=>{});
+    } catch(err){showToast('Could not read file: '+err.message,'err');}
+  };
+  reader.readAsArrayBuffer(inp.files[0]);
+}
+
+function allStores() { return [...STORE_MASTER, ...DYNAMIC_STORES]; }
+
+function renderStoreMaster() {
+  const q    = (document.getElementById('adm-store-search')?.value||'').toLowerCase();
+  const list = allStores().filter(s=>!q||(s.code+s.name+s.region+s.me+s.vendor).toLowerCase().includes(q));
+  const total= list.length, s=(storeMasterPg-1)*ADM_PG, pg=list.slice(s,s+ADM_PG);
+  document.getElementById('store-master-body').innerHTML = pg.map((st,i)=>`<tr>
+    <td style="color:var(--muted2)">${s+i+1}</td>
+    <td class="mono">${st.code}</td>
+    <td style="font-weight:600">${st.name}</td>
+    <td>${st.region||'—'}</td>
+    <td>${st.me||'—'}</td>
+    <td>${st.vendor||'—'}</td>
+    <td>${st.state||'—'}</td>
+    <td>${st.city||'—'}</td>
+    <td>${DYNAMIC_STORES.includes(st)?`<button class="btn-sm btn-red-o" style="padding:3px 9px;font-size:10px" onclick="removeDynStore('${st.code}')">✕ Remove</button>`:'<span style="color:var(--muted2);font-size:10px">Built-in</span>'}</td>
+  </tr>`).join('') || `<tr><td colspan="9" style="text-align:center;padding:28px;color:var(--muted)">No stores found</td></tr>`;
+  renderPgn('store-master',total,storeMasterPg);
+}
+
+function removeDynStore(code) {
+  DYNAMIC_STORES = DYNAMIC_STORES.filter(s=>s.code!==code);
+  renderStoreMaster(); showToast('Store removed','ok');
+}
+
+function downloadStoreTemplate() {
+  const cols = ['Store Code','Store Name','Region','ME Name','Vendor Name','State','City'];
+  const sample = [['LKST9999','Sample Store Mumbai','West','Eknath','CREATIVE SIGNAGE','Maharashtra','Mumbai']];
+  toXlsx('Store_Master_Template', cols, sample);
+}
+
+function exportStoreMaster() {
+  const cols = ['Store Code','Store Name','Region','ME Name','Vendor Name','State','City'];
+  const rows = allStores().map(s=>[s.code,s.name,s.region,s.me,s.vendor,s.state||'',s.city||'']);
+  toXlsx('Store_Master', cols, rows);
+}
+
+// ── VENDOR MASTER UPLOAD ──────────────────────────────────────────
+function handleVendorMasterUpload(inp) {
+  if (!inp.files||!inp.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const wb   = XLSX.read(new Uint8Array(e.target.result),{type:'array'});
+      const ws   = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws,{defval:''});
+      if (!rows.length){showToast('File empty','err');return;}
+      let added=0,updated=0;
+      rows.forEach(r => {
+        const code = String(r['Vendor Code']||r['vendor_code']||r['Code']||'').trim();
+        const name = String(r['Vendor Name']||r['vendor_name']||r['Name']||'').trim();
+        if (!code||!name) return;
+        const inStatic = VENDORS.findIndex(v=>v.code.toLowerCase()===code.toLowerCase());
+        if (inStatic>-1) { VENDORS[inStatic]={code,name}; updated++; return; }
+        const inDyn = VENDORS_DYNAMIC.findIndex(v=>v.code.toLowerCase()===code.toLowerCase());
+        if (inDyn>-1)    { VENDORS_DYNAMIC[inDyn]={code,name}; updated++; }
+        else             { VENDORS_DYNAMIC.push({code,name}); added++; }
+      });
+      admVendorPg=1; renderAdminVendors();
+      showToast(`🏢 Vendor master: ${added} added, ${updated} updated`,'ok');
+      if (APPS_SCRIPT_URL&&APPS_SCRIPT_URL.length>40)
+        fetch(APPS_SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},
+          body:JSON.stringify({action:'uploadVendorMaster',vendors:VENDORS_DYNAMIC})}).catch(()=>{});
+    } catch(err){showToast('Could not read file: '+err.message,'err');}
+  };
+  reader.readAsArrayBuffer(inp.files[0]);
+}
+
+function renderAdminVendors() {
+  const q    = (document.getElementById('adm-vendor-search')?.value||'').toLowerCase();
+  const list = [...VENDORS,...VENDORS_DYNAMIC].filter(v=>!q||(v.code+v.name).toLowerCase().includes(q));
+  const total= list.length, s=(admVendorPg-1)*ADM_PG, pg=list.slice(s,s+ADM_PG);
+  document.getElementById('adm-vendor-body').innerHTML = pg.map((v,i)=>`<tr>
+    <td style="color:var(--muted2)">${s+i+1}</td>
+    <td class="mono">${v.code}</td>
+    <td style="font-weight:600">${v.name}</td>
+    <td class="mono">${v.code}</td>
+    <td class="mono">${v.code}</td>
+    <td>${VENDORS_DYNAMIC.includes(v)?`<button class="btn-sm btn-red-o" style="padding:3px 9px;font-size:10px" onclick="removeDynVendor('${v.code}')">✕ Remove</button>`:'<span style="color:var(--muted2);font-size:10px">Built-in</span>'}</td>
+  </tr>`).join('') || `<tr><td colspan="6" style="text-align:center;padding:28px;color:var(--muted)">No vendors found</td></tr>`;
+  renderPgn('adm-vendor',total,admVendorPg);
+}
+
+function removeDynVendor(code) {
+  VENDORS_DYNAMIC = VENDORS_DYNAMIC.filter(v=>v.code!==code);
+  renderAdminVendors(); showToast('Vendor removed','ok');
+}
+
+function downloadVendorTemplate() {
+  const cols   = ['Vendor Code','Vendor Name'];
+  const sample = [['VEND99999','Sample Vendor Pvt Ltd']];
+  toXlsx('Vendor_Master_Template', cols, sample);
+}
+
+// ── hook chPg for new pagination targets ──────────────────────────
+const _origChPg = chPg;
 // ════════ ADMIN ════════
 function renderAdminMEs(){document.getElementById('me-body').innerHTML=USERS.filter(u=>u.role==='ME').map((u,i)=>`<tr><td style="color:var(--muted2)">${i+1}</td><td style="font-weight:600">${u.name}</td><td>${u.first}</td><td>${u.region}</td><td>${u.rh}</td><td class="mono" style="font-size:11px">${u.email}</td><td style="font-size:11px;color:var(--muted)">—</td></tr>`).join('');}
 
@@ -1877,7 +2103,17 @@ function renderPgn(w,total,pg){
     ${ns.map(n=>`<button class="pg-btn ${n===pg?'on':''}" onclick="chPg('${w}',${n})">${n}</button>`).join('')}
     <button class="pg-btn" onclick="chPg('${w}',${pg+1})" ${pg===pages?'disabled':''}>›</button></div>`;
 }
-function chPg(w,pg){if(w==='open'){openPg=pg;renderOpen();}else if(w==='closed'){closedPg=pg;renderClosed();}else if(w==='asg'){asgPg=pg;renderAssigned();}else if(w==='wbr'){wbrPg=pg;renderWbr();}else if(w==='ven'){venPg=pg;renderVendor();}else if(w==='vm'){vmPg=pg;renderVendorMgmt();}else{billPg=pg;renderBilling();}}
+function chPg(w,pg){
+  if(w==='open'){openPg=pg;renderOpen();}
+  else if(w==='closed'){closedPg=pg;renderClosed();}
+  else if(w==='asg'){asgPg=pg;renderAssigned();}
+  else if(w==='wbr'){wbrPg=pg;renderWbr();}
+  else if(w==='ven'){venPg=pg;renderVendor();}
+  else if(w==='vm'){vmPg=pg;renderVendorMgmt();}
+  else if(w==='store-master'){storeMasterPg=pg;renderStoreMaster();}
+  else if(w==='adm-vendor'){admVendorPg=pg;renderAdminVendors();}
+  else{billPg=pg;renderBilling();}
+}
 
 // ════════ EXPORTS ════════
 function tsStamp(){return new Date().toISOString().slice(0,10);}
