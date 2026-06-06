@@ -744,9 +744,8 @@ td.mono{font-family:var(--mono);font-size:11px;color:var(--accent2);}
   <!-- MASTER DATA -->
   <div id="pg-master" class="content hidden">
     <div class="phdr">
-      <div><div class="ptitle">📋 Master Data Management</div><div class="psub">Add · Edit · Delete — Store, ME, RH, Vendor masters</div></div>
+      <div><div class="ptitle">📋 Master Data Management</div><div class="psub">Store · ME · RH · Vendor — all cross-linked and auto-synced</div></div>
     </div>
-    <!-- Master sub-tabs -->
     <div style="display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap;">
       <button class="btn-sm btn-accent" id="mst-tab-store"  onclick="setMasterTab('store')">🏪 Store Master</button>
       <button class="btn-sm"            id="mst-tab-me"     onclick="setMasterTab('me')">👷 ME Master</button>
@@ -754,160 +753,170 @@ td.mono{font-family:var(--mono);font-size:11px;color:var(--accent2);}
       <button class="btn-sm"            id="mst-tab-vendor" onclick="setMasterTab('vendor')">🏢 Vendor Master</button>
     </div>
 
-    <!-- ── STORE MASTER ── -->
+    <!-- ══ STORE MASTER ══ -->
     <div id="mst-panel-store">
       <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:16px;box-shadow:var(--sh);">
         <div style="font-size:14px;font-weight:700;margin-bottom:14px;" id="store-form-title">➕ Add New Store</div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;">
-          <div class="field"><label>Store Code *</label><input class="edit-inp" id="mst-s-code" placeholder="e.g. LKST9999" style="width:100%"></div>
-          <div class="field"><label>Store Name *</label><input class="edit-inp" id="mst-s-name" placeholder="Store name" style="width:100%"></div>
-          <div class="field"><label>Region</label>
-            <select class="edit-sel" id="mst-s-region" style="width:100%">
-              <option value="">— Select —</option>
-              <option>East</option><option>North</option><option>South</option><option>West</option><option>HO</option>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;">
+          <div class="field"><label>Store Code *</label><input class="edit-inp" id="mst-s-code" placeholder="e.g. LKST9999" style="width:100%;text-transform:uppercase" oninput="this.value=this.value.toUpperCase()"></div>
+          <div class="field"><label>Store Name *</label><input class="edit-inp" id="mst-s-name" placeholder="Store full name" style="width:100%"></div>
+          <div class="field"><label>Region *</label>
+            <select class="edit-sel" id="mst-s-region" style="width:100%" onchange="onStoreRegionChange()">
+              <option value="">— Select Region —</option>
+              <option>East</option><option>North</option><option>South</option><option>West</option>
             </select>
           </div>
           <div class="field"><label>ME Name</label>
             <select class="edit-sel" id="mst-s-me" style="width:100%"><option value="">— Select ME —</option></select>
           </div>
-          <div class="field"><label>Vendor Name</label>
-            <select class="edit-sel" id="mst-s-vendor" style="width:100%"><option value="">— Select Vendor —</option></select>
-          </div>
-          <div class="field"><label>State</label><input class="edit-inp" id="mst-s-state" placeholder="e.g. Maharashtra" style="width:100%"></div>
-          <div class="field"><label>City</label><input class="edit-inp" id="mst-s-city" placeholder="e.g. Mumbai" style="width:100%"></div>
+          <div class="field"><label>State</label><input class="edit-inp" id="mst-s-state" placeholder="e.g. Uttar Pradesh" style="width:100%"></div>
+          <div class="field"><label>City</label><input class="edit-inp" id="mst-s-city" placeholder="e.g. Noida" style="width:100%"></div>
         </div>
-        <div style="display:flex;gap:8px;margin-top:14px;">
+        <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;">
           <button class="btn-sm btn-accent" onclick="saveMasterStore()">💾 Save Store</button>
           <button class="btn-sm" onclick="clearMasterStoreForm()">↺ Clear</button>
           <button class="btn-sm btn-green" onclick="exportStoreMaster()">⬇ Export Excel</button>
           <button class="btn-sm" onclick="downloadStoreTemplate()">⬇ Template</button>
-          <div class="upbox" style="padding:6px 12px;border:1.5px dashed var(--border2);margin:0;display:inline-flex;align-items:center;gap:8px;cursor:pointer;" onclick="document.getElementById('store-master-file').click()">
-            <span style="font-size:12px;color:var(--muted);">📁 Bulk Upload Excel</span>
+          <label class="btn-sm" style="cursor:pointer;border-style:dashed;color:var(--muted);">
+            📁 Bulk Upload
             <input type="file" id="store-master-file" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleStoreMasterUpload(this)">
-          </div>
+          </label>
         </div>
         <div id="store-form-msg" style="margin-top:8px;font-size:12px;"></div>
       </div>
+      <!-- Stats row -->
+      <div class="stats" id="store-master-stats" style="margin-bottom:16px;"></div>
       <div class="tbl-wrap">
         <div class="toolbar">
-          <span class="tbl-title">Store List (<span id="store-count">0</span>)</span>
-          <input class="fsearch" id="mst-store-search" placeholder="Search code, name, region..." oninput="renderMasterStore()" style="margin-left:auto">
+          <span class="tbl-title">Stores (<span id="store-count">0</span>)</span>
+          <select class="fsel" id="mst-s-filter-region" onchange="renderMasterStore()">
+            <option value="">All Regions</option><option>East</option><option>North</option><option>South</option><option>West</option>
+          </select>
+          <select class="fsel" id="mst-s-filter-me" onchange="renderMasterStore()"><option value="">All MEs</option></select>
+          <input class="fsearch" id="mst-store-search" placeholder="Search code, name, city..." oninput="renderMasterStore()" style="margin-left:auto">
         </div>
-        <div class="tscroll"><table><thead><tr>
-          <th>#</th><th>Store Code</th><th>Store Name</th><th>Region</th><th>ME</th><th>Vendor</th><th>State</th><th>City</th><th>Actions</th>
-        </tr></thead><tbody id="mst-store-body"></tbody></table></div>
+        <div class="tscroll">
+          <table><thead><tr>
+            <th>#</th><th>Store Code</th><th>Store Name</th><th>Region</th><th>ME Name</th><th>State</th><th>City</th><th>Actions</th>
+          </tr></thead><tbody id="mst-store-body"></tbody></table>
+        </div>
         <div class="pgn" id="mst-store-pgn"></div>
       </div>
     </div>
 
-    <!-- ── ME MASTER ── -->
+    <!-- ══ ME MASTER ══ -->
     <div id="mst-panel-me" class="hidden">
       <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:16px;box-shadow:var(--sh);">
         <div style="font-size:14px;font-weight:700;margin-bottom:14px;" id="me-form-title">➕ Add New ME</div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;">
-          <div class="field"><label>Full Name *</label><input class="edit-inp" id="mst-me-name" placeholder="Full name" style="width:100%" oninput="autoFillFirst()"></div>
-          <div class="field"><label>First Name *</label><input class="edit-inp" id="mst-me-first" placeholder="First name (login)" style="width:100%"></div>
-          <div class="field"><label>Email *</label><input class="edit-inp" id="mst-me-email" placeholder="name@lenskart.com" style="width:100%"></div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;">
+          <div class="field"><label>ME Full Name *</label><input class="edit-inp" id="mst-me-name" placeholder="e.g. Ajay Vishwakarma" style="width:100%" oninput="meAutoFirst()"></div>
+          <div class="field"><label>First Name *</label><input class="edit-inp" id="mst-me-first" placeholder="e.g. Ajay (used for login)" style="width:100%"></div>
+          <div class="field"><label>Email ID *</label><input class="edit-inp" id="mst-me-email" placeholder="ajay@lenskart.com" style="width:100%"></div>
           <div class="field"><label>Password</label><input class="edit-inp" id="mst-me-pass" placeholder="Auto: firstname@lk" style="width:100%"></div>
-          <div class="field"><label>Region</label>
+          <div class="field"><label>Region *</label>
             <select class="edit-sel" id="mst-me-region" style="width:100%" onchange="filterRHByRegion()">
-              <option value="">— Select —</option>
+              <option value="">— Select Region —</option>
               <option>East</option><option>North</option><option>South</option><option>West</option>
             </select>
           </div>
-          <div class="field"><label>RH (Reporting Head)</label>
+          <div class="field"><label>Reporting RH</label>
             <select class="edit-sel" id="mst-me-rh" style="width:100%"><option value="">— Select RH —</option></select>
           </div>
-          <div class="field"><label>Contact</label><input class="edit-inp" id="mst-me-contact" placeholder="Mobile number" style="width:100%"></div>
+          <div class="field"><label>Area / Look</label><input class="edit-inp" id="mst-me-area" placeholder="Area covered by ME" style="width:100%"></div>
+          <div class="field"><label>Contact Number</label><input class="edit-inp" id="mst-me-contact" placeholder="10-digit mobile" style="width:100%"></div>
+          <div class="field"><label>No. of Stores</label>
+            <input class="edit-inp" id="mst-me-stores" readonly placeholder="Auto from Store Master" style="width:100%;background:var(--green-light);color:var(--green);font-weight:700;">
+          </div>
         </div>
-        <div style="display:flex;gap:8px;margin-top:14px;">
+        <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;">
           <button class="btn-sm btn-accent" onclick="saveMasterME()">💾 Save ME</button>
           <button class="btn-sm" onclick="clearMasterMEForm()">↺ Clear</button>
           <button class="btn-sm btn-green" onclick="exportMEs()">⬇ Export Excel</button>
           <button class="btn-sm" onclick="downloadMETemplate()">⬇ Template</button>
-          <div class="upbox" style="padding:6px 12px;border:1.5px dashed var(--border2);margin:0;display:inline-flex;align-items:center;gap:8px;cursor:pointer;" onclick="document.getElementById('me-master-file').click()">
-            <span style="font-size:12px;color:var(--muted);">📁 Bulk Upload Excel</span>
+          <label class="btn-sm" style="cursor:pointer;border-style:dashed;color:var(--muted);">
+            📁 Bulk Upload
             <input type="file" id="me-master-file" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleMEMasterUpload(this)">
-          </div>
+          </label>
         </div>
         <div id="me-form-msg" style="margin-top:8px;font-size:12px;"></div>
       </div>
       <div class="tbl-wrap">
         <div class="toolbar">
-          <span class="tbl-title">ME List (<span id="me-count">0</span>)</span>
-          <input class="fsearch" id="mst-me-search" placeholder="Search name, region..." oninput="renderMasterME()" style="margin-left:auto">
+          <span class="tbl-title">MEs (<span id="me-count">0</span>)</span>
+          <select class="fsel" id="mst-me-filter-region" onchange="renderMasterME()">
+            <option value="">All Regions</option><option>East</option><option>North</option><option>South</option><option>West</option>
+          </select>
+          <input class="fsearch" id="mst-me-search" placeholder="Search name, email, area..." oninput="renderMasterME()" style="margin-left:auto">
         </div>
-        <div class="tscroll"><table><thead><tr>
-          <th>#</th><th>Full Name</th><th>First Name</th><th>Email</th><th>Password</th><th>Region</th><th>RH</th><th>Contact</th><th>Actions</th>
-        </tr></thead><tbody id="mst-me-body"></tbody></table></div>
+        <div class="tscroll">
+          <table><thead><tr>
+            <th>#</th><th>ME Name</th><th>Email</th><th>Password</th><th>Region</th><th>RH</th><th>Area / Look</th><th>Contact</th><th>No. of Stores</th><th>Actions</th>
+          </tr></thead><tbody id="mst-me-body"></tbody></table>
+        </div>
         <div class="pgn" id="mst-me-pgn"></div>
       </div>
     </div>
 
-    <!-- ── RH MASTER ── -->
+    <!-- ══ RH MASTER ══ -->
     <div id="mst-panel-rh" class="hidden">
       <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:16px;box-shadow:var(--sh);">
         <div style="font-size:14px;font-weight:700;margin-bottom:14px;" id="rh-form-title">➕ Add New RH</div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;">
-          <div class="field"><label>Full Name *</label><input class="edit-inp" id="mst-rh-name" placeholder="Full name" style="width:100%"></div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;">
+          <div class="field"><label>RH Full Name *</label><input class="edit-inp" id="mst-rh-name" placeholder="Full name" style="width:100%"></div>
           <div class="field"><label>First Name *</label><input class="edit-inp" id="mst-rh-first" placeholder="First name" style="width:100%"></div>
           <div class="field"><label>Email *</label><input class="edit-inp" id="mst-rh-email" placeholder="name@lenskart.com" style="width:100%"></div>
           <div class="field"><label>Password</label><input class="edit-inp" id="mst-rh-pass" placeholder="Auto: firstname@lk" style="width:100%"></div>
           <div class="field"><label>Region *</label>
             <select class="edit-sel" id="mst-rh-region" style="width:100%">
-              <option value="">— Select —</option>
-              <option>East</option><option>North</option><option>South</option><option>West</option>
+              <option value="">— Select —</option><option>East</option><option>North</option><option>South</option><option>West</option>
             </select>
           </div>
           <div class="field"><label>Contact</label><input class="edit-inp" id="mst-rh-contact" placeholder="Mobile number" style="width:100%"></div>
+          <div class="field"><label>No of Stores</label><input class="edit-inp" id="mst-rh-stores" readonly placeholder="Auto from Store Master" style="width:100%;background:var(--accent-light);color:var(--accent2)"></div>
         </div>
-        <div style="display:flex;gap:8px;margin-top:14px;">
+        <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;">
           <button class="btn-sm btn-accent" onclick="saveMasterRH()">💾 Save RH</button>
           <button class="btn-sm" onclick="clearMasterRHForm()">↺ Clear</button>
           <button class="btn-sm btn-green" onclick="exportRHs()">⬇ Export Excel</button>
         </div>
+        <!-- RH region store summary -->
+        <div id="rh-stores-summary" style="margin-top:14px;"></div>
         <div id="rh-form-msg" style="margin-top:8px;font-size:12px;"></div>
       </div>
       <div class="tbl-wrap">
-        <div class="toolbar">
-          <span class="tbl-title">RH List (<span id="rh-count">0</span>)</span>
+        <div class="toolbar"><span class="tbl-title">RHs (<span id="rh-count">0</span>)</span>
           <input class="fsearch" id="mst-rh-search" placeholder="Search name, region..." oninput="renderMasterRH()" style="margin-left:auto">
         </div>
-        <div class="tscroll"><table><thead><tr>
-          <th>#</th><th>Full Name</th><th>First Name</th><th>Email</th><th>Password</th><th>Region</th><th>Contact</th><th>Actions</th>
-        </tr></thead><tbody id="mst-rh-body"></tbody></table></div>
+        <div class="tscroll"><table><thead><tr><th>#</th><th>RH Name</th><th>Email</th><th>Password</th><th>Region</th><th>Contact</th><th>No of Stores</th><th>Actions</th></tr></thead><tbody id="mst-rh-body"></tbody></table></div>
         <div class="pgn" id="mst-rh-pgn"></div>
       </div>
     </div>
 
-    <!-- ── VENDOR MASTER ── -->
+    <!-- ══ VENDOR MASTER ══ -->
     <div id="mst-panel-vendor" class="hidden">
       <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:16px;box-shadow:var(--sh);">
         <div style="font-size:14px;font-weight:700;margin-bottom:14px;" id="vnd-form-title">➕ Add New Vendor</div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;">
           <div class="field"><label>Vendor Code *</label><input class="edit-inp" id="mst-v-code" placeholder="e.g. VEND09999" style="width:100%"></div>
           <div class="field"><label>Vendor Name *</label><input class="edit-inp" id="mst-v-name" placeholder="Full vendor name" style="width:100%"></div>
+          <div class="field"><label>SPOC Name</label><input class="edit-inp" id="mst-v-spoc" placeholder="Point of contact name" style="width:100%"></div>
+          <div class="field"><label>Email</label><input class="edit-inp" id="mst-v-email" placeholder="vendor@email.com" style="width:100%"></div>
+          <div class="field"><label>Contact</label><input class="edit-inp" id="mst-v-contact" placeholder="Mobile number" style="width:100%"></div>
         </div>
-        <div style="display:flex;gap:8px;margin-top:14px;">
+        <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;">
           <button class="btn-sm btn-accent" onclick="saveMasterVendor()">💾 Save Vendor</button>
           <button class="btn-sm" onclick="clearMasterVendorForm()">↺ Clear</button>
           <button class="btn-sm btn-green" onclick="exportVendors()">⬇ Export Excel</button>
           <button class="btn-sm" onclick="downloadVendorTemplate()">⬇ Template</button>
-          <div class="upbox" style="padding:6px 12px;border:1.5px dashed var(--border2);margin:0;display:inline-flex;align-items:center;gap:8px;cursor:pointer;" onclick="document.getElementById('vendor-master-file').click()">
-            <span style="font-size:12px;color:var(--muted);">📁 Bulk Upload Excel</span>
-            <input type="file" id="vendor-master-file" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleVendorMasterUpload(this)">
-          </div>
+          <label class="btn-sm" style="cursor:pointer;border-style:dashed;">📁 Bulk Upload <input type="file" id="vendor-master-file" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleVendorMasterUpload(this)"></label>
         </div>
         <div id="vnd-form-msg" style="margin-top:8px;font-size:12px;"></div>
       </div>
       <div class="tbl-wrap">
-        <div class="toolbar">
-          <span class="tbl-title">Vendor List (<span id="vendor-count">0</span>)</span>
+        <div class="toolbar"><span class="tbl-title">Vendors (<span id="vendor-count">0</span>)</span>
           <input class="fsearch" id="mst-vendor-search" placeholder="Search code, name..." oninput="renderMasterVendor()" style="margin-left:auto">
         </div>
-        <div class="tscroll"><table><thead><tr>
-          <th>#</th><th>Vendor Code</th><th>Vendor Name</th><th>Login Username</th><th>Login Password</th><th>Actions</th>
-        </tr></thead><tbody id="mst-vendor-body"></tbody></table></div>
+        <div class="tscroll"><table><thead><tr><th>#</th><th>Vendor Code</th><th>Vendor Name</th><th>SPOC Name</th><th>Email</th><th>Contact</th><th>Login (Code/Code)</th><th>Actions</th></tr></thead><tbody id="mst-vendor-body"></tbody></table></div>
         <div class="pgn" id="mst-vendor-pgn"></div>
       </div>
     </div>
