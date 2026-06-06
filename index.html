@@ -757,20 +757,36 @@ td.mono{font-family:var(--mono);font-size:11px;color:var(--accent2);}
     <div id="mst-panel-store">
       <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:16px;box-shadow:var(--sh);">
         <div style="font-size:14px;font-weight:700;margin-bottom:14px;" id="store-form-title">➕ Add New Store</div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;">
           <div class="field"><label>Store Code *</label><input class="edit-inp" id="mst-s-code" placeholder="e.g. LKST9999" style="width:100%;text-transform:uppercase" oninput="this.value=this.value.toUpperCase()"></div>
-          <div class="field"><label>Store Name *</label><input class="edit-inp" id="mst-s-name" placeholder="Store full name" style="width:100%"></div>
           <div class="field"><label>Region *</label>
             <select class="edit-sel" id="mst-s-region" style="width:100%" onchange="onStoreRegionChange()">
-              <option value="">— Select Region —</option>
+              <option value="">— Select —</option>
               <option>East</option><option>North</option><option>South</option><option>West</option>
             </select>
           </div>
-          <div class="field"><label>ME Name</label>
+          <div class="field"><label>ME *</label>
             <select class="edit-sel" id="mst-s-me" style="width:100%"><option value="">— Select ME —</option></select>
           </div>
-          <div class="field"><label>State</label><input class="edit-inp" id="mst-s-state" placeholder="e.g. Uttar Pradesh" style="width:100%"></div>
-          <div class="field"><label>City</label><input class="edit-inp" id="mst-s-city" placeholder="e.g. Noida" style="width:100%"></div>
+          <div class="field"><label>Franchise Name</label><input class="edit-inp" id="mst-s-franchise" placeholder="Franchise/Store Name" style="width:100%"></div>
+          <div class="field"><label>Store Email</label><input class="edit-inp" id="mst-s-semail" placeholder="store@lenskart.com" style="width:100%"></div>
+          <div class="field"><label>Opening Month</label><input class="edit-inp" id="mst-s-opening" placeholder="e.g. Apr-2023" style="width:100%"></div>
+          <div class="field"><label>Vintage</label><input class="edit-inp" id="mst-s-vintage" placeholder="e.g. 2 Years" style="width:100%"></div>
+          <div class="field"><label>Size</label><input class="edit-inp" id="mst-s-size" placeholder="e.g. Small/Large" style="width:100%"></div>
+          <div class="field"><label>Channel</label><input class="edit-inp" id="mst-s-channel" placeholder="e.g. Franchise" style="width:100%"></div>
+          <div class="field"><label>Format</label><input class="edit-inp" id="mst-s-format" placeholder="e.g. High Street" style="width:100%"></div>
+          <div class="field"><label>Shop Type</label><input class="edit-inp" id="mst-s-shoptype" placeholder="e.g. Kiosk/Store" style="width:100%"></div>
+          <div class="field"><label>Status</label>
+            <select class="edit-sel" id="mst-s-status" style="width:100%">
+              <option value="">— Select —</option>
+              <option>Active</option><option>Inactive</option><option>Closed</option>
+            </select>
+          </div>
+          <div class="field"><label>City</label><input class="edit-inp" id="mst-s-city" placeholder="City" style="width:100%"></div>
+          <div class="field"><label>State</label><input class="edit-inp" id="mst-s-state" placeholder="State" style="width:100%"></div>
+          <div class="field"><label>BH</label><input class="edit-inp" id="mst-s-bh" placeholder="Business Head" style="width:100%"></div>
+          <div class="field"><label>ZM</label><input class="edit-inp" id="mst-s-zm" placeholder="Zonal Manager" style="width:100%"></div>
+          <div class="field"><label>AOM</label><input class="edit-inp" id="mst-s-aom" placeholder="Area Ops Manager" style="width:100%"></div>
         </div>
         <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;">
           <button class="btn-sm btn-accent" onclick="saveMasterStore()">💾 Save Store</button>
@@ -797,7 +813,8 @@ td.mono{font-family:var(--mono);font-size:11px;color:var(--accent2);}
         </div>
         <div class="tscroll">
           <table><thead><tr>
-            <th>#</th><th>Store Code</th><th>Store Name</th><th>Region</th><th>ME Name</th><th>State</th><th>City</th><th>Actions</th>
+            <th>#</th><th>Store Code</th><th>Region</th><th>ME</th><th>Franchise Name</th>
+            <th>City</th><th>State</th><th>Channel</th><th>Format</th><th>Status</th><th>BH</th><th>ZM</th><th>AOM</th><th>Actions</th>
           </tr></thead><tbody id="mst-store-body"></tbody></table>
         </div>
         <div class="pgn" id="mst-store-pgn"></div>
